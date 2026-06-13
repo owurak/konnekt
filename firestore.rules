@@ -1,0 +1,205 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function currentUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function hasAdminRole(data) {
+      return (
+        data.keys().hasAny(["role"])
+        && (data.role == "admin" || data.role == "Admin" || data.role == "ADMIN")
+      ) || (
+        data.keys().hasAny(["isAdmin"])
+        && data.isAdmin == true
+      );
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && hasAdminRole(currentUserDoc().data);
+    }
+
+    function isMemberProfileCreate(userId) {
+      return isSelf(userId)
+        && request.resource.data.keys().hasOnly([
+          "id",
+          "fullName",
+          "professionalTitle",
+          "industry",
+          "skills",
+          "location",
+          "bio",
+          "photoUrl",
+          "email",
+          "portfolioWebsite",
+          "role",
+          "verified",
+          "suspended",
+          "createdAt"
+        ])
+        && request.resource.data.id == userId
+        && request.resource.data.role == "member"
+        && request.resource.data.verified == false
+        && request.resource.data.suspended == false;
+    }
+
+    function isProfileUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        "fullName",
+        "professionalTitle",
+        "industry",
+        "skills",
+        "location",
+        "bio",
+        "photoUrl",
+        "portfolioWebsite"
+      ]);
+    }
+
+    function isConnectionCreate() {
+      return signedIn()
+        && request.resource.data.keys().hasOnly([
+          "id",
+          "senderId",
+          "receiverId",
+          "status",
+          "createdAt"
+        ])
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.status == "pending";
+    }
+
+    function isConnectionResponse() {
+      return signedIn()
+        && resource.data.receiverId == request.auth.uid
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(["status"])
+        && request.resource.data.status in ["accepted", "rejected"];
+    }
+
+    function isOpportunityCreate() {
+      return signedIn()
+        && request.resource.data.keys().hasOnly([
+          "id",
+          "title",
+          "description",
+          "type",
+          "location",
+          "applyLink",
+          "posterId",
+          "status",
+          "createdAt"
+        ])
+        && request.resource.data.posterId == request.auth.uid
+        && request.resource.data.type in ["Job", "Business", "Collaboration"]
+        && (
+          request.resource.data.status == "pending"
+          || (isAdmin() && request.resource.data.status == "approved")
+        );
+    }
+
+    function isPosterOpportunityUpdate() {
+      return signedIn()
+        && resource.data.posterId == request.auth.uid
+        && request.resource.data.posterId == resource.data.posterId
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "title",
+          "description",
+          "type",
+          "location",
+          "applyLink"
+        ]);
+    }
+
+    function isNotificationCreate() {
+      return signedIn()
+        && request.resource.data.keys().hasOnly([
+          "id",
+          "userId",
+          "type",
+          "message",
+          "read",
+          "createdAt"
+        ])
+        && request.resource.data.type in [
+          "connection_request",
+          "connection_accepted",
+          "opportunity_match",
+          "message",
+          "system"
+        ]
+        && request.resource.data.read == false;
+    }
+
+    function isNotificationReadUpdate() {
+      return signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(["read"]);
+    }
+
+    function isMessageCreate() {
+      return signedIn()
+        && request.resource.data.keys().hasOnly([
+          "id",
+          "senderId",
+          "receiverId",
+          "body",
+          "createdAt"
+        ])
+        && request.resource.data.senderId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create: if isMemberProfileCreate(userId);
+      allow update: if isAdmin() || (isSelf(userId) && isProfileUpdate());
+      allow delete: if isAdmin();
+    }
+
+    match /connections/{connectionId} {
+      allow read: if signedIn()
+        && (resource.data.senderId == request.auth.uid
+          || resource.data.receiverId == request.auth.uid
+          || isAdmin());
+      allow create: if isConnectionCreate();
+      allow update: if isAdmin() || isConnectionResponse();
+      allow delete: if isAdmin();
+    }
+
+    match /opportunities/{opportunityId} {
+      allow read: if signedIn();
+      allow create: if isOpportunityCreate();
+      allow update: if isAdmin() || isPosterOpportunityUpdate();
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.posterId == request.auth.uid);
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isNotificationCreate();
+      allow update: if isAdmin() || isNotificationReadUpdate();
+      allow delete: if isAdmin();
+    }
+
+    match /messages/{messageId} {
+      allow read: if signedIn()
+        && (resource.data.senderId == request.auth.uid
+          || resource.data.receiverId == request.auth.uid
+          || isAdmin());
+      allow create: if isMessageCreate();
+      allow update, delete: if isAdmin();
+    }
+  }
+}
