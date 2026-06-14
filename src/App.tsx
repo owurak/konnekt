@@ -11,6 +11,7 @@ import {
   type TextareaHTMLAttributes,
 } from "react";
 import {
+  browserLocalPersistence,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   OAuthProvider,
@@ -21,6 +22,7 @@ import {
   signInWithPopup,
   signInWithRedirect,
   signOut,
+  setPersistence,
 } from "firebase/auth";
 import {
   collection,
@@ -900,9 +902,16 @@ export default function App() {
 
   useEffect(() => {
     if (!auth) return;
-    getRedirectResult(auth).catch((redirectError) => {
-      setRuntimeError(getSocialAuthErrorMessage(redirectError));
-    });
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          setCurrentUserId(result.user.uid);
+          navigate("/");
+        }
+      })
+      .catch((redirectError) => {
+        setRuntimeError(getSocialAuthErrorMessage(redirectError));
+      });
   }, []);
 
   useEffect(() => {
@@ -1036,7 +1045,9 @@ export default function App() {
   const handleLogin = async (values: LoginValues) => {
     setRuntimeError("");
     if (auth) {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      await setPersistence(auth, browserLocalPersistence);
+      const credential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      setCurrentUserId(credential.user.uid);
       navigate("/");
       return;
     }
@@ -1063,23 +1074,23 @@ export default function App() {
     const provider =
       providerName === "google" ? new GoogleAuthProvider() : new OAuthProvider("apple.com");
 
-   if (providerName === "google") {
-  provider.addScope("email");
-  provider.addScope("profile");
-  provider.setCustomParameters({
-    prompt: "select_account consent"
-  });
-} else {
-  provider.addScope("email");
-  provider.addScope("name");
-}
+    if (providerName === "google") {
+      provider.addScope("email");
+      provider.addScope("profile");
+      provider.setCustomParameters({ prompt: "select_account" });
+    } else {
+      provider.addScope("email");
+      provider.addScope("name");
+    }
 
     try {
+      await setPersistence(auth, browserLocalPersistence);
       if (shouldUseRedirectSignIn()) {
         await signInWithRedirect(auth, provider);
         return;
       }
-      await signInWithPopup(auth, provider);
+      const credential = await signInWithPopup(auth, provider);
+      setCurrentUserId(credential.user.uid);
       navigate("/");
     } catch (socialError) {
       throw new Error(getSocialAuthErrorMessage(socialError, providerName));
@@ -1121,6 +1132,7 @@ export default function App() {
     };
 
     if (auth && db) {
+      await setPersistence(auth, browserLocalPersistence);
       const credential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const firebaseProfile = {
         ...newProfile,
@@ -1129,6 +1141,7 @@ export default function App() {
         verified: false,
       } satisfies UserProfile;
       await setDoc(doc(db, "users", credential.user.uid), firebaseProfile);
+      setCurrentUserId(credential.user.uid);
       navigate("/");
       return;
     }
@@ -2174,7 +2187,7 @@ function AuthPage({
 
               {mode !== "reset" ? (
                 <div className="mb-5 space-y-3">
-                  <div className="grid gap-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <Button
                       className="w-full"
                       type="button"
@@ -2186,7 +2199,17 @@ function AuthPage({
                       <span className="font-heading text-base">G</span>
                       Continue with Google
                     </Button>
-                   
+                    <Button
+                      className="w-full"
+                      type="button"
+                      variant="outline"
+                      disabled={!firebaseEnabled || Boolean(socialSubmitting)}
+                      loading={socialSubmitting === "apple"}
+                      onClick={() => void runSocialLogin("apple")}
+                    >
+                      <span className="font-heading text-base">A</span>
+                      Continue with Apple
+                    </Button>
                   </div>
                   {!firebaseEnabled ? (
                     <p className="text-center text-xs text-slate-500">Social sign-in appears after Firebase is connected.</p>
