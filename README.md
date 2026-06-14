@@ -35,6 +35,9 @@ This version keeps the existing Firebase/Firestore app and upgrades the experien
 - Premium dashboard welcome area with connection, opportunity, and profile-completion metrics.
 - Storage-safe generated initials avatars, so profile images still look polished when Firebase Storage is disabled.
 - Opportunity posts now support industry, budget, and deadline fields.
+- Jiji-style product/business listing system: users can post listings, choose a category, set price/condition/location/contact details, and seller details are attached from the registered profile.
+- Listings are stored in the `listings` Firestore collection. Normal member listings are pending until admin approval; admin listings publish immediately.
+- Approved listings can appear in the public directory and logged-in Home directory.
 
 ## Profile Photo Uploads
 
