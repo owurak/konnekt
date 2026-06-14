@@ -1,10 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Konnekt app icon">
-  <rect width="512" height="512" rx="112" fill="#0B6B3A"/>
-  <circle cx="394" cy="118" r="34" fill="#D4AF37"/>
-  <circle cx="118" cy="394" r="34" fill="#D4AF37"/>
-  <path d="M154 128v256" stroke="#fff" stroke-width="58" stroke-linecap="round"/>
-  <path d="M344 128 182 286" stroke="#fff" stroke-width="58" stroke-linecap="round"/>
-  <path d="M204 254 360 384" stroke="#fff" stroke-width="58" stroke-linecap="round"/>
-  <path d="M375 144c-60 10-111 40-151 87" stroke="#D4AF37" stroke-width="20" stroke-linecap="round" opacity=".9"/>
-  <path d="M137 368c60-10 111-40 151-87" stroke="#D4AF37" stroke-width="20" stroke-linecap="round" opacity=".9"/>
-</svg>
+konnekt-icon-192.png
+konnekt-icon-512.png
+konnekt-maskable-512.png
+apple-touch-icon.png
+favicon-32.png
