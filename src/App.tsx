@@ -14,10 +14,12 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   OAuthProvider,
+  getRedirectResult,
   onAuthStateChanged,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
 } from "firebase/auth";
 import {
@@ -170,6 +172,7 @@ type IconName =
   | "network"
   | "plus"
   | "search"
+  | "settings"
   | "shield"
   | "user"
   | "x";
@@ -724,6 +727,39 @@ function getStorageUploadErrorMessage(uploadError: unknown) {
   return message || "Unable to upload this profile photo. Try a smaller JPG or PNG image.";
 }
 
+function shouldUseRedirectSignIn() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(max-width: 768px)").matches ||
+    window.matchMedia("(pointer: coarse)").matches
+  );
+}
+
+function getSocialAuthErrorMessage(error: unknown, providerName?: SocialProviderName) {
+  const message = error instanceof Error ? error.message : String(error);
+  const providerLabel = providerName === "apple" ? "Apple" : providerName === "google" ? "Google" : "social";
+
+  if (message.includes("auth/popup-closed-by-user")) {
+    return "Sign-in was cancelled before it completed.";
+  }
+  if (message.includes("auth/popup-blocked")) {
+    return "Your browser blocked the sign-in popup. Try again, or use email and password.";
+  }
+  if (message.includes("auth/operation-not-allowed")) {
+    return providerName === "apple"
+      ? "Apple sign-in is not fully configured. Firebase requires Apple Developer Service ID, Team ID, Key ID, and private key, not only the enable switch."
+      : `Enable ${providerLabel} sign-in in Firebase Authentication first.`;
+  }
+  if (message.includes("auth/unauthorized-domain")) {
+    return "Add this domain to Firebase Authentication authorized domains.";
+  }
+  if (message.includes("auth/account-exists-with-different-credential")) {
+    return "An account already exists with this email using another sign-in method. Login with that method first.";
+  }
+
+  return message || `${providerLabel} sign-in failed.`;
+}
+
 function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine
@@ -810,6 +846,13 @@ export default function App() {
     return onAuthStateChanged(auth, (firebaseUser) => {
       setCurrentUserId(firebaseUser ? firebaseUser.uid : null);
       setAuthReady(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!auth) return;
+    getRedirectResult(auth).catch((redirectError) => {
+      setRuntimeError(getSocialAuthErrorMessage(redirectError));
     });
   }, []);
 
@@ -980,24 +1023,14 @@ export default function App() {
     }
 
     try {
+      if (shouldUseRedirectSignIn()) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
       await signInWithPopup(auth, provider);
       navigate("/");
     } catch (socialError) {
-      const message = socialError instanceof Error ? socialError.message : "Social sign-in failed.";
-      if (message.includes("auth/popup-closed-by-user")) {
-        throw new Error("Sign-in was cancelled before it completed.");
-      }
-      if (message.includes("auth/operation-not-allowed")) {
-        throw new Error(
-          providerName === "apple"
-            ? "Apple sign-in is not fully configured. Firebase requires Apple Developer Service ID, Team ID, Key ID, and private key, not only the enable switch."
-            : "Enable Google sign-in in Firebase Authentication first."
-        );
-      }
-      if (message.includes("auth/unauthorized-domain")) {
-        throw new Error("Add this domain to Firebase Authentication authorized domains.");
-      }
-      throw new Error(message);
+      throw new Error(getSocialAuthErrorMessage(socialError, providerName));
     }
   };
 
@@ -1503,6 +1536,18 @@ export default function App() {
       );
     }
 
+    if (path === "/settings") {
+      return (
+        <SettingsPage
+          currentUser={currentUser}
+          firebaseEnabled={isFirebaseConfigured}
+          storageEnabled={Boolean(storage) && import.meta.env.VITE_ENABLE_FIREBASE_STORAGE === "true"}
+          navigate={navigate}
+          onLogout={handleLogout}
+        />
+      );
+    }
+
     if (path === "/admin") {
       if (!isAdminUser(currentUser)) return <AccessDenied currentUser={currentUser} />;
       return (
@@ -1823,6 +1868,8 @@ function Icon({ name, className }: { name: IconName; className?: string }) {
       return <svg {...props}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>;
     case "search":
       return <svg {...props}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>;
+    case "settings":
+      return <svg {...props}><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.2.35.5.65.86.86.32.19.7.3 1.09.3H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15" /></svg>;
     case "plus":
       return <svg {...props}><path d="M12 5v14" /><path d="M5 12h14" /></svg>;
     case "check":
@@ -2075,7 +2122,7 @@ function AuthPage({
 
               {mode !== "reset" ? (
                 <div className="mb-5 space-y-3">
-                  <div className="grid gap-3">
+                 <div className="grid gap-3">
                     <Button
                       className="w-full"
                       type="button"
@@ -2087,7 +2134,7 @@ function AuthPage({
                       <span className="font-heading text-base">G</span>
                       Continue with Google
                     </Button>
-                    
+  
                   </div>
                   {!firebaseEnabled ? (
                     <p className="text-center text-xs text-slate-500">Social sign-in appears after Firebase is connected.</p>
@@ -2309,8 +2356,9 @@ function AppShell({
     { label: "Profile", mobileLabel: "Profile", path: `/profile/${currentUser.id}`, icon: "user" as IconName },
   ];
 
+  const settingsItem = { label: "Settings", mobileLabel: "Settings", path: "/settings", icon: "settings" as IconName };
   const adminItem = isAdminUser(currentUser) ? [{ label: "Admin", path: "/admin", icon: "admin" as IconName }] : [];
-  const allItems = [...navigationItems, ...adminItem];
+  const allItems = [...navigationItems, settingsItem, ...adminItem];
   const mobileItems = navigationItems;
 
   return (
@@ -2353,6 +2401,17 @@ function AppShell({
               <h1 className="font-heading text-2xl font-bold text-[#142019]">{pageTitle(path)}</h1>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                className={cn(
+                  "flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:text-[#0B6B3A]",
+                  path === "/settings" && "border-[#0B6B3A]/30 text-[#0B6B3A]"
+                )}
+                type="button"
+                onClick={() => navigate("/settings")}
+                aria-label="Settings"
+              >
+                <Icon name="settings" />
+              </button>
               {isAdminUser(currentUser) ? (
                 <button
                   className={cn(
@@ -2482,6 +2541,7 @@ function pageTitle(path: string) {
   if (path.startsWith("/profile")) return "Profile";
   if (path.startsWith("/notifications")) return "Notifications";
   if (path.startsWith("/messages")) return "Messages";
+  if (path.startsWith("/settings")) return "Settings";
   if (path.startsWith("/admin")) return "Admin";
   return "Konnekt";
 }
@@ -3587,6 +3647,115 @@ function MessageBubble({ message, isOwn }: { message: Message; isOwn: boolean })
         <p className="leading-6">{message.body}</p>
         <p className={cn("mt-1 text-[11px]", isOwn ? "text-white/70" : "text-slate-400")}>{relativeTime(message.createdAt)}</p>
       </div>
+    </div>
+  );
+}
+
+function SettingsPage({
+  currentUser,
+  firebaseEnabled,
+  storageEnabled,
+  navigate,
+  onLogout,
+}: {
+  currentUser: UserProfile;
+  firebaseEnabled: boolean;
+  storageEnabled: boolean;
+  navigate: (to: string) => void;
+  onLogout: () => Promise<void>;
+}) {
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const runLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await onLogout();
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <Panel className="animate-rise">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <Avatar user={currentUser} size="lg" />
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">Settings</p>
+              <h1 className="mt-1 font-heading text-3xl font-bold text-[#142019]">Account and app controls</h1>
+              <p className="mt-1 text-sm text-slate-500">Manage your Konnekt session, profile, and platform access.</p>
+            </div>
+          </div>
+          <Button variant="danger" loading={loggingOut} onClick={() => void runLogout()}>
+            <Icon name="logout" /> Logout
+          </Button>
+        </div>
+      </Panel>
+
+      <div className="grid gap-5 lg:grid-cols-[1fr_0.9fr]">
+        <Panel>
+          <SectionTitle title="Account" />
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <InfoLine icon="user" label="Name" value={currentUser.fullName} />
+            <InfoLine icon="mail" label="Email" value={currentUser.email || "No email on profile"} />
+            <InfoLine icon="briefcase" label="Professional title" value={currentUser.professionalTitle} />
+            <InfoLine icon="shield" label="Role" value={isAdminUser(currentUser) ? "Admin" : "Member"} />
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => navigate(`/profile/${currentUser.id}`)}>
+              <Icon name="user" /> View profile
+            </Button>
+            {isAdminUser(currentUser) ? (
+              <Button variant="outline" onClick={() => navigate("/admin")}>
+                <Icon name="admin" /> Admin panel
+              </Button>
+            ) : null}
+          </div>
+        </Panel>
+
+        <Panel>
+          <SectionTitle title="Platform status" />
+          <div className="mt-5 space-y-3">
+            <StatusLine label="Firebase" active={firebaseEnabled} activeText="Connected" inactiveText="Demo mode" />
+            <StatusLine label="Authentication" active={firebaseEnabled} activeText="Live auth" inactiveText="Local demo auth" />
+            <StatusLine label="Profile photo storage" active={storageEnabled} activeText="Enabled" inactiveText="Skipped for now" />
+            <StatusLine label="Offline access" active={false} activeText="Enabled" inactiveText="Blocked for live data safety" />
+          </div>
+        </Panel>
+      </div>
+
+      <Panel>
+        <SectionTitle title="Security" />
+        <p className="mt-4 text-sm leading-6 text-slate-500">
+          Passwords are handled by Firebase Authentication and are not stored in Firestore. Use logout on shared devices, especially on mobile browsers.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => navigate("/reset")}>Reset password</Button>
+          <Button variant="danger" loading={loggingOut} onClick={() => void runLogout()}>
+            <Icon name="logout" /> Logout from this device
+          </Button>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function StatusLine({
+  label,
+  active,
+  activeText,
+  inactiveText,
+}: {
+  label: string;
+  active: boolean;
+  activeText: string;
+  inactiveText: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#F8FAF9] px-4 py-3">
+      <span className="text-sm font-semibold text-slate-600">{label}</span>
+      <Badge tone={active ? "green" : "gold"}>{active ? activeText : inactiveText}</Badge>
     </div>
   );
 }
