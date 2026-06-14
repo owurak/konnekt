@@ -26,6 +26,16 @@ Demo mode starts on the login screen. Use the member or admin demo credentials o
 
 The `messages` collection is included because the MVP requires one-to-one messaging.
 
+## Latest Upgrade Notes
+
+This version keeps the existing Firebase/Firestore app and upgrades the experience instead of rebuilding from scratch:
+
+- Public Canva-inspired landing page at `/` for visitors.
+- Logged-out visitors can choose **Join Free** or **Explore Opportunities** instead of being forced directly to login.
+- Premium dashboard welcome area with connection, opportunity, and profile-completion metrics.
+- Storage-safe generated initials avatars, so profile images still look polished when Firebase Storage is disabled.
+- Opportunity posts now support industry, budget, and deadline fields.
+
 ## Profile Photo Uploads
 
 Profile photo uploads are optional. If you are skipping Firebase Storage or billing for now, keep this in `.env.local`:
