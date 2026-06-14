@@ -2066,180 +2066,163 @@ function DashboardSkeleton() {
 }
 
 function LandingPage({ navigate }: { navigate: (to: string) => void }) {
-  const featureCards = [
+  const featuredCategories = [
     {
-      title: "Smart Networking",
-      description: "Connect with entrepreneurs, freelancers, investors, recruiters, and business builders who match your goals.",
-      icon: "network" as IconName,
+      title: "Beauty & Makeup",
+      image: "https://images.pexels.com/photos/3373746/pexels-photo-3373746.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
     },
     {
-      title: "Business Opportunities",
-      description: "Discover jobs, projects, partnerships, joint ventures, and funding requests across African markets.",
-      icon: "briefcase" as IconName,
+      title: "Groceries & Food",
+      image: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
     },
     {
-      title: "Secure Messaging",
-      description: "Start focused one-to-one conversations after accepted connection requests â€” no file storage required for MVP chat.",
-      icon: "message" as IconName,
+      title: "Electronics",
+      image: "https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
     },
     {
-      title: "Admin Moderation",
-      description: "Approve opportunity posts, verify profiles, suspend spam accounts, and track platform activity from one panel.",
-      icon: "shield" as IconName,
+      title: "Shoes & Footwear",
+      image: "https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
     },
   ];
 
-  const steps = ["Create Profile", "Build Network", "Discover Opportunities", "Grow Your Business"];
-  const audiences = ["Entrepreneurs", "Freelancers", "Investors", "Recruiters", "SMEs"];
+  const moreCategories = [
+    {
+      title: "Printing Services",
+      image: "https://images.pexels.com/photos/5691622/pexels-photo-5691622.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+    },
+    {
+      title: "Fashion & Clothing",
+      image: "https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+    },
+    {
+      title: "Books & Education",
+      image: "https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+    },
+    {
+      title: "Phones & Accessories",
+      image: "https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+    },
+  ];
+
+  const stats = [
+    { label: "100+ Businesses", helper: "Listed & growing", icon: "briefcase" as IconName },
+    { label: "Active Community", helper: "Consumers & vendors", icon: "network" as IconName },
+    { label: "Direct Contact", helper: "Reach businesses easily", icon: "mail" as IconName },
+    { label: "Verified Listings", helper: "Trusted businesses", icon: "shield" as IconName },
+  ];
+
+  const scrollToCategories = () => {
+    document.getElementById("categories")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#F8FAF9] text-[#142019]">
-      <header className="sticky top-0 z-40 border-b border-white/60 bg-[#F8FAF9]/85 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <LogoMark />
-          <nav className="hidden items-center gap-6 text-sm font-semibold text-slate-600 md:flex">
-            <a className="hover:text-[#0B6B3A]" href="#features">Features</a>
-            <a className="hover:text-[#0B6B3A]" href="#how-it-works">How it works</a>
-            <a className="hover:text-[#0B6B3A]" href="#mvp">MVP</a>
-          </nav>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>Login</Button>
-            <Button size="sm" onClick={() => navigate("/register")}>Join Free</Button>
-          </div>
-        </div>
-      </header>
-
-      <section className="relative">
-        <div className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_20%_20%,rgba(212,175,55,0.28),transparent_24rem),linear-gradient(135deg,#052f1c,#0B6B3A_52%,#0e7d47)]" />
-        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-24">
-          <div className="flex flex-col justify-center text-white">
-            <Badge tone="gold" className="w-fit bg-white/15 text-[#F7D76B] ring-1 ring-white/15">Business Networking Platform for Africa</Badge>
-            <h1 className="mt-6 font-heading text-4xl font-extrabold leading-tight sm:text-6xl lg:text-7xl">
-              Connect with Professionals, Investors and Businesses Across Africa
+    <main className="min-h-screen bg-[#1f1f1f] text-white">
+      <section className="relative overflow-hidden border-b border-white/10 bg-[#003b1f] px-4 py-9 text-center sm:px-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(19,150,90,0.35),transparent_24rem)]" />
+        <div className="relative mx-auto max-w-5xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/45">Business Directory</p>
+          <div className="mt-3 flex items-center justify-center gap-4">
+            <div className="hidden h-14 w-14 items-center justify-center rounded-full bg-white/90 font-heading text-sm font-bold italic text-[#003b1f] shadow-lg sm:flex">
+              K
+            </div>
+            <h1 className="font-heading text-5xl font-extrabold tracking-tight text-white sm:text-7xl">
+              KONNEKT
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-white/82 sm:text-lg">
-              Discover opportunities, build partnerships, and grow your business with Konnekt â€” where African businesses connect.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button className="bg-[#D4AF37] text-[#241c06] hover:bg-[#c8a32f]" size="lg" onClick={() => navigate("/register")}>
-                Join Free <Icon name="arrow" className="h-5 w-5" />
-              </Button>
-              <Button className="border-white/20 bg-white/10 text-white hover:bg-white/20" variant="outline" size="lg" onClick={() => navigate("/login")}>
-                Explore Opportunities
-              </Button>
-            </div>
-            <div className="mt-10 flex flex-wrap gap-2">
-              {audiences.map((audience) => (
-                <span key={audience} className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/85 ring-1 ring-white/15">
-                  {audience}
-                </span>
-              ))}
-            </div>
           </div>
-
-          <div className="relative min-h-[34rem]">
-            <div className="absolute -right-10 top-6 h-72 w-72 rounded-full bg-[#D4AF37]/25 blur-3xl" />
-            <div className="relative overflow-hidden rounded-[2.2rem] bg-white/10 p-3 shadow-2xl shadow-emerald-950/30 ring-1 ring-white/20 backdrop-blur">
-              <img className="h-[32rem] w-full rounded-[1.7rem] object-cover" src={HERO_IMAGE_URL} alt="Professional African entrepreneurs collaborating" />
-              <div className="absolute inset-3 rounded-[1.7rem] bg-gradient-to-t from-[#052f1c]/85 via-transparent to-transparent" />
-              <div className="absolute bottom-8 left-8 right-8 rounded-3xl bg-white/92 p-5 text-[#142019] shadow-xl backdrop-blur">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Live MVP ready</p>
-                <h2 className="mt-2 font-heading text-2xl font-bold">Profiles, connections, messages and opportunities</h2>
-                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-semibold text-slate-600">
-                  <div className="rounded-2xl bg-[#F8FAF9] p-3"><span className="block font-heading text-xl text-[#0B6B3A]">6+</span>Seed profiles</div>
-                  <div className="rounded-2xl bg-[#F8FAF9] p-3"><span className="block font-heading text-xl text-[#0B6B3A]">4</span>Opportunities</div>
-                  <div className="rounded-2xl bg-[#F8FAF9] p-3"><span className="block font-heading text-xl text-[#0B6B3A]">Admin</span>Panel</div>
-                </div>
-              </div>
-            </div>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/85 sm:text-lg">
+            Find, connect & do business with local entrepreneurs across Africa.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <button className="rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10" type="button" onClick={scrollToCategories}>Find</button>
+            <button className="rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10" type="button" onClick={() => navigate("/login")}>Connect</button>
+            <button className="rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10" type="button" onClick={() => navigate("/register")}>Grow</button>
           </div>
         </div>
       </section>
 
-      <section id="features" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">Platform features</p>
-          <h2 className="mt-3 font-heading text-3xl font-bold sm:text-5xl">Built for opportunity discovery and trusted growth.</h2>
-          <p className="mt-4 text-sm leading-7 text-slate-500 sm:text-base">
-            The MVP focuses on the core features needed to launch quickly without Firebase Storage or paid upload infrastructure.
-          </p>
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#242424]/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-center gap-7 overflow-x-auto px-4 py-4 text-sm font-semibold text-white/85 sm:text-base">
+          <a className="border-b-4 border-[#0B6B3A] pb-2 text-white" href="#home">Home</a>
+          <a className="pb-2 hover:text-white" href="#categories">Categories</a>
+          <a className="pb-2 hover:text-white" href="#about">About Us</a>
+          <button className="pb-2 hover:text-white" type="button" onClick={() => navigate("/register")}>Register</button>
+          <a className="pb-2 hover:text-white" href="#contact">Contact Us</a>
         </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {featureCards.map((feature) => (
-            <article key={feature.title} className="rounded-[2rem] bg-white p-6 shadow-sm shadow-slate-200/70 ring-1 ring-slate-200/70 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200">
-              <div className="flex h-13 w-13 items-center justify-center rounded-3xl bg-[#0B6B3A]/10 text-[#0B6B3A]">
-                <Icon name={feature.icon} className="h-6 w-6" />
-              </div>
-              <h3 className="mt-5 font-heading text-xl font-bold">{feature.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-500">{feature.description}</p>
-            </article>
+      </header>
+
+      <section id="home" className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <label className="relative block">
+            <Icon name="search" className="absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-white/45" />
+            <input
+              className="w-full rounded-2xl border border-white/15 bg-[#2b2b2b] py-4 pl-13 pr-4 text-base text-white outline-none transition placeholder:text-white/38 focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/25"
+              placeholder="Search business categories..."
+            />
+          </label>
+          <Button className="rounded-2xl bg-[#003b1f] px-8 py-4 text-base hover:bg-[#00502b]" onClick={scrollToCategories}>Search</Button>
+        </div>
+      </section>
+
+      <section id="categories" className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <DirectorySection title="Featured Categories" categories={featuredCategories} />
+        <div className="mt-14">
+          <DirectorySection title="More Categories" categories={moreCategories} />
+        </div>
+      </section>
+
+      <section id="about" className="bg-[#003b1f] py-10">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+          {stats.map((stat) => (
+            <div key={stat.label} className="text-center">
+              <Icon name={stat.icon} className="mx-auto h-9 w-9 text-white/70" />
+              <p className="mt-3 text-xl font-extrabold text-white">{stat.label}</p>
+              <p className="mt-1 text-base text-white/70">{stat.helper}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      <section id="how-it-works" className="bg-white/70 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">How it works</p>
-              <h2 className="mt-3 font-heading text-3xl font-bold sm:text-5xl">From profile to partnership in four steps.</h2>
-              <p className="mt-4 text-sm leading-7 text-slate-500">Konnekt helps members move from discovery to conversation to business action.</p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {steps.map((step, index) => (
-                <div key={step} className="rounded-[2rem] bg-[#F8FAF9] p-6 ring-1 ring-slate-200/70">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#D4AF37] font-heading text-lg font-bold text-[#241c06]">{index + 1}</span>
-                  <h3 className="mt-5 font-heading text-xl font-bold">{step}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
-                    {index === 0 && "Register with email or Google, then add your title, country, industry, skills, and bio."}
-                    {index === 1 && "Search professionals and send LinkedIn-style connection requests."}
-                    {index === 2 && "Browse approved opportunities, jobs, projects, investments, and collaborations."}
-                    {index === 3 && "Message accepted connections and turn trusted relationships into results."}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+      <section id="contact" className="mx-auto max-w-6xl px-4 py-12 text-center sm:px-6">
+        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">Konnekt Business Directory</p>
+        <h2 className="mt-3 font-heading text-3xl font-bold">Ready to list, connect, and grow?</h2>
+        <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/60">
+          Register your profile now. The business directory style can be connected to the existing Konnekt networking platform, opportunities, messaging, and admin panel.
+        </p>
+        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button className="bg-[#0B6B3A] hover:bg-[#095a31]" size="lg" onClick={() => navigate("/register")}>Register</Button>
+          <Button className="border-white/15 bg-white/5 text-white hover:bg-white/10" variant="outline" size="lg" onClick={() => navigate("/login")}>Login</Button>
         </div>
       </section>
-
-      <section id="mvp" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-5 lg:grid-cols-3">
-          <Panel className="lg:col-span-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">MVP build first</p>
-            <h2 className="mt-3 font-heading text-3xl font-bold">Launch-ready scope without Firebase Storage.</h2>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {["Registration/Login", "User Profiles", "Search Users", "Connection Requests", "Text Messaging", "Opportunity Listings", "Notifications", "Admin Panel"].map((item) => (
-                <div key={item} className="flex items-center gap-3 rounded-2xl bg-[#F8FAF9] p-3 text-sm font-semibold text-slate-700">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0B6B3A] text-white"><Icon name="check" className="h-4 w-4" /></span>
-                  {item}
-                </div>
-              ))}
-            </div>
-          </Panel>
-          <Panel className="bg-[#0B6B3A] text-white ring-[#0B6B3A]">
-            <h2 className="font-heading text-2xl font-bold">Storage-safe plan</h2>
-            <p className="mt-4 text-sm leading-7 text-white/80">
-              Profile images and file sharing can be delayed. Until then, Konnekt uses generated avatars and Firestore-only text data.
-            </p>
-            <Button className="mt-6 w-full bg-white text-[#0B6B3A] hover:bg-white/90" onClick={() => navigate("/register")}>Start building your profile</Button>
-          </Panel>
-        </div>
-      </section>
-
-      <footer className="border-t border-slate-200 bg-white py-10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <LogoMark />
-          <div className="flex flex-wrap gap-4 text-sm font-semibold text-slate-500">
-            <a href="#features">About Us</a>
-            <a href="#mvp">Privacy Policy</a>
-            <a href="#mvp">Terms</a>
-            <a href="#mvp">Contact</a>
-            <a href="#how-it-works">FAQ</a>
-          </div>
-        </div>
-      </footer>
     </main>
+  );
+}
+
+function DirectorySection({
+  title,
+  categories,
+}: {
+  title: string;
+  categories: Array<{ title: string; image: string }>;
+}) {
+  return (
+    <div>
+      <h2 className="font-heading text-3xl font-extrabold uppercase tracking-wide text-white sm:text-4xl">{title}</h2>
+      <div className="mt-6 grid grid-cols-2 gap-4">
+        {categories.map((category) => (
+          <button
+            key={category.title}
+            className="group overflow-hidden rounded-2xl bg-[#242424] text-left shadow-lg shadow-black/10 ring-1 ring-white/5 transition hover:-translate-y-1 hover:ring-[#0B6B3A]/60"
+            type="button"
+          >
+            <div className="relative h-36 overflow-hidden sm:h-44">
+              <img className="h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105 group-hover:opacity-90" src={category.image} alt={category.title} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+            </div>
+            <p className="px-3 py-3 text-center text-base font-semibold text-white sm:text-xl">{category.title}</p>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -4345,3 +4328,4 @@ function NotFound({ navigate }: { navigate: (to: string) => void }) {
     <EmptyState title="Page not found" description="The page you requested does not exist in Konnekt." action={<Button onClick={() => navigate("/")}>Go home</Button>} />
   );
 }
+
