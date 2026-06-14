@@ -14,7 +14,6 @@ import {
   browserLocalPersistence,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
-  OAuthProvider,
   getRedirectResult,
   onAuthStateChanged,
   sendPasswordResetEmail,
@@ -155,7 +154,7 @@ type CreateOpportunityValues = {
 };
 
 type AuthMode = "login" | "register" | "reset";
-type SocialProviderName = "google" | "apple";
+type SocialProviderName = "google";
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
@@ -743,7 +742,7 @@ function shouldUseRedirectSignIn() {
 
 function getSocialAuthErrorMessage(error: unknown, providerName?: SocialProviderName) {
   const message = error instanceof Error ? error.message : String(error);
-  const providerLabel = providerName === "apple" ? "Apple" : providerName === "google" ? "Google" : "social";
+  const providerLabel = providerName === "google" ? "Google" : "social";
 
   if (message.includes("auth/popup-closed-by-user")) {
     return "Sign-in was cancelled before it completed.";
@@ -752,9 +751,7 @@ function getSocialAuthErrorMessage(error: unknown, providerName?: SocialProvider
     return "Your browser blocked the sign-in popup. Try again, or use email and password.";
   }
   if (message.includes("auth/operation-not-allowed")) {
-    return providerName === "apple"
-      ? "Apple sign-in is not fully configured. Firebase requires Apple Developer Service ID, Team ID, Key ID, and private key, not only the enable switch."
-      : `Enable ${providerLabel} sign-in in Firebase Authentication first.`;
+    return `Enable ${providerLabel} sign-in in Firebase Authentication first.`;
   }
   if (message.includes("auth/unauthorized-domain")) {
     return "Add this domain to Firebase Authentication authorized domains.";
@@ -1077,37 +1074,31 @@ export default function App() {
     navigate("/");
   };
 
-  const handleSocialLogin = async (providerName: SocialProviderName) => {
-    setRuntimeError("");
-    if (!auth) {
-      throw new Error("Social sign-in is available only when Firebase is connected.");
-    }
+ const handleSocialLogin = async (providerName: SocialProviderName) => {
+  setRuntimeError("");
+  if (!auth) {
+    throw new Error("Social sign-in is available only when Firebase is connected.");
+  }
 
-    const provider =
-      providerName === "google" ? new GoogleAuthProvider() : new OAuthProvider("apple.com");
+  const provider = new GoogleAuthProvider();
+  provider.addScope("email");
+  provider.addScope("profile");
+  provider.setCustomParameters({ prompt: "select_account" });
 
-    if (providerName === "google") {
-      provider.addScope("email");
-      provider.addScope("profile");
-      provider.setCustomParameters({ prompt: "select_account" });
-    } else {
-      provider.addScope("email");
-      provider.addScope("name");
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    const credential = await signInWithPopup(auth, provider);
+    setCurrentUserId(credential.user.uid);
+    navigate("/");
+  } catch (socialError) {
+    const message = socialError instanceof Error ? socialError.message : String(socialError);
+    if (shouldUseRedirectSignIn() && message.includes("auth/popup-blocked")) {
+      await signInWithRedirect(auth, provider);
+      return;
     }
-
-    try {
-      await setPersistence(auth, browserLocalPersistence);
-      if (shouldUseRedirectSignIn()) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-      const credential = await signInWithPopup(auth, provider);
-      setCurrentUserId(credential.user.uid);
-      navigate("/");
-    } catch (socialError) {
-      throw new Error(getSocialAuthErrorMessage(socialError, providerName));
-    }
-  };
+    throw new Error(getSocialAuthErrorMessage(socialError, providerName));
+  }
+};
 
   const handleDemoLogin = async (kind: "member" | "admin") => {
     if (isFirebaseConfigured) {
@@ -2211,7 +2202,6 @@ function AuthPage({
                       <span className="font-heading text-base">G</span>
                       Continue with Google
                     </Button>
-                   
                   </div>
                   {!firebaseEnabled ? (
                     <p className="text-center text-xs text-slate-500">Social sign-in appears after Firebase is connected.</p>
