@@ -128,6 +128,67 @@ service cloud.firestore {
         ]);
     }
 
+    function isListingCreate() {
+      return signedIn()
+        && request.resource.data.keys().hasOnly([
+          "id",
+          "name",
+          "category",
+          "description",
+          "location",
+          "phone",
+          "website",
+          "verified",
+          "price",
+          "condition",
+          "imageUrl",
+          "sellerId",
+          "sellerName",
+          "sellerEmail",
+          "status",
+          "createdAt"
+        ])
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.category in [
+          "Beauty & Makeup",
+          "Groceries & Food",
+          "Electronics",
+          "Shoes & Footwear",
+          "Printing Services",
+          "Fashion & Clothing",
+          "Books & Education",
+          "Phones & Accessories"
+        ]
+        && (
+          request.resource.data.status == "pending"
+          || (isAdmin() && request.resource.data.status == "approved")
+        );
+    }
+
+    function isSellerListingUpdate() {
+      return signedIn()
+        && resource.data.sellerId == request.auth.uid
+        && request.resource.data.sellerId == resource.data.sellerId
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "name",
+          "category",
+          "description",
+          "location",
+          "phone",
+          "website",
+          "price",
+          "condition",
+          "imageUrl"
+        ]);
+    }
+
+    function isAdminListingApproval() {
+      return isAdmin()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(["status"])
+        && request.resource.data.status in ["approved", "pending"];
+    }
+
     function isNotificationCreate() {
       return signedIn()
         && request.resource.data.keys().hasOnly([
@@ -189,6 +250,14 @@ service cloud.firestore {
       allow update: if isAdmin() || isPosterOpportunityUpdate();
       allow delete: if isAdmin()
         || (signedIn() && resource.data.posterId == request.auth.uid);
+    }
+
+    match /listings/{listingId} {
+      allow read: if resource.data.status == "approved" || signedIn();
+      allow create: if isListingCreate();
+      allow update: if isAdmin() || isSellerListingUpdate() || isAdminListingApproval();
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.sellerId == request.auth.uid);
     }
 
     match /notifications/{notificationId} {
