@@ -2066,41 +2066,42 @@ function DashboardSkeleton() {
 }
 
 function LandingPage({ navigate }: { navigate: (to: string) => void }) {
+  const pwaInstall = usePwaInstallPrompt();
   const featuredCategories = [
     {
       title: "Beauty & Makeup",
-      image: "https://images.pexels.com/photos/3373746/pexels-photo-3373746.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+      image: "https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
     },
     {
       title: "Groceries & Food",
-      image: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+      image: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
     },
     {
       title: "Electronics",
-      image: "https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+      image: "https://images.pexels.com/photos/1841841/pexels-photo-1841841.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
     },
     {
       title: "Shoes & Footwear",
-      image: "https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+      image: "https://images.pexels.com/photos/19090/pexels-photo.jpg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
     },
   ];
 
   const moreCategories = [
     {
       title: "Printing Services",
-      image: "https://images.pexels.com/photos/5691622/pexels-photo-5691622.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+      image: "https://images.pexels.com/photos/5691622/pexels-photo-5691622.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
     },
     {
       title: "Fashion & Clothing",
-      image: "https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+      image: "https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
     },
     {
       title: "Books & Education",
-      image: "https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+      image: "https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
     },
     {
       title: "Phones & Accessories",
-      image: "https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=360&w=640",
+      image: "https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
     },
   ];
 
@@ -2117,82 +2118,104 @@ function LandingPage({ navigate }: { navigate: (to: string) => void }) {
 
   return (
     <main className="min-h-screen bg-[#1f1f1f] text-white">
-      <section className="relative overflow-hidden border-b border-white/10 bg-[#003b1f] px-4 py-9 text-center sm:px-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(19,150,90,0.35),transparent_24rem)]" />
+      <section id="home" className="relative overflow-hidden border-b border-[#323232] bg-[#003b1f] px-4 pb-12 pt-9 text-center sm:px-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(8,88,45,0.65),transparent_22rem)]" />
         <div className="relative mx-auto max-w-5xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/45">Business Directory</p>
+          <p className="text-xs font-medium uppercase tracking-[0.35em] text-white/32">Business Directory</p>
           <div className="mt-3 flex items-center justify-center gap-4">
-            <div className="hidden h-14 w-14 items-center justify-center rounded-full bg-white/90 font-heading text-sm font-bold italic text-[#003b1f] shadow-lg sm:flex">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#d9dedb] font-serif text-base font-bold italic text-[#003b1f] shadow-lg">
               K
             </div>
-            <h1 className="font-heading text-5xl font-extrabold tracking-tight text-white sm:text-7xl">
+            <h1 className="font-serif text-[3.15rem] font-black uppercase leading-none tracking-[-0.03em] text-white drop-shadow sm:text-7xl">
               KONNEKT
             </h1>
           </div>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/85 sm:text-lg">
-            Find, connect & do business with local entrepreneurs across Africa.
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/86 sm:text-lg">
+            Find, connect & do business with local entrepreneurs
           </p>
           <div className="mt-6 flex justify-center gap-3">
-            <button className="rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10" type="button" onClick={scrollToCategories}>Find</button>
-            <button className="rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10" type="button" onClick={() => navigate("/login")}>Connect</button>
-            <button className="rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10" type="button" onClick={() => navigate("/register")}>Grow</button>
+            <button className="rounded-full border border-white/12 bg-[#00361d] px-5 py-2 text-sm font-medium text-white/90 transition hover:bg-white/10" type="button" onClick={scrollToCategories}>Find</button>
+            <button className="rounded-full border border-white/12 bg-[#00361d] px-5 py-2 text-sm font-medium text-white/90 transition hover:bg-white/10" type="button" onClick={() => navigate("/login")}>Connect</button>
+            <button className="rounded-full border border-white/12 bg-[#00361d] px-5 py-2 text-sm font-medium text-white/90 transition hover:bg-white/10" type="button" onClick={() => navigate("/register")}>Grow</button>
           </div>
         </div>
       </section>
 
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#242424]/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-center gap-7 overflow-x-auto px-4 py-4 text-sm font-semibold text-white/85 sm:text-base">
-          <a className="border-b-4 border-[#0B6B3A] pb-2 text-white" href="#home">Home</a>
-          <a className="pb-2 hover:text-white" href="#categories">Categories</a>
-          <a className="pb-2 hover:text-white" href="#about">About Us</a>
-          <button className="pb-2 hover:text-white" type="button" onClick={() => navigate("/register")}>Register</button>
-          <a className="pb-2 hover:text-white" href="#contact">Contact Us</a>
+      <header className="sticky top-0 z-40 border-b border-[#3a3a3a] bg-[#242424]">
+        <div className="mx-auto flex max-w-6xl items-center gap-7 overflow-x-auto px-5 py-4 text-base font-medium text-white/90 sm:justify-center">
+          <a className="shrink-0 border-b-4 border-[#008a58] pb-2 text-white" href="#home">Home</a>
+          <a className="shrink-0 pb-2 hover:text-white" href="#categories">Categories</a>
+          <a className="shrink-0 pb-2 hover:text-white" href="#about">About Us</a>
+          <button className="shrink-0 pb-2 hover:text-white" type="button" onClick={() => navigate("/register")}>Register</button>
+          <a className="shrink-0 pb-2 hover:text-white" href="#contact">Contact Us</a>
+          {pwaInstall.canInstall ? (
+            <button className="shrink-0 rounded-full bg-[#003b1f] px-4 py-2 text-sm font-bold text-white" type="button" onClick={() => void pwaInstall.installApp()}>
+              Install
+            </button>
+          ) : null}
         </div>
       </header>
 
-      <section id="home" className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+      <section className="border-b border-[#313131] px-5 py-5">
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto] gap-3">
           <label className="relative block">
-            <Icon name="search" className="absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-white/45" />
+            <Icon name="search" className="absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-white/42" />
             <input
-              className="w-full rounded-2xl border border-white/15 bg-[#2b2b2b] py-4 pl-13 pr-4 text-base text-white outline-none transition placeholder:text-white/38 focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/25"
+              className="h-[3.35rem] w-full rounded-xl border border-[#555663] bg-[#2a2a2a] pl-12 pr-4 text-base text-white outline-none placeholder:text-white/42 focus:border-[#008a58] focus:ring-2 focus:ring-[#008a58]/25"
               placeholder="Search business categories..."
             />
           </label>
-          <Button className="rounded-2xl bg-[#003b1f] px-8 py-4 text-base hover:bg-[#00502b]" onClick={scrollToCategories}>Search</Button>
+          <button className="h-[3.35rem] rounded-xl bg-[#003b1f] px-6 text-base font-extrabold text-white transition hover:bg-[#00502b]" type="button" onClick={scrollToCategories}>
+            Search
+          </button>
         </div>
       </section>
 
-      <section id="categories" className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <section id="categories" className="mx-auto max-w-6xl px-5 py-10">
         <DirectorySection title="Featured Categories" categories={featuredCategories} />
         <div className="mt-14">
           <DirectorySection title="More Categories" categories={moreCategories} />
         </div>
       </section>
 
-      <section id="about" className="bg-[#003b1f] py-10">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+      <section id="about" className="bg-[#003b1f] py-9">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-4 gap-y-8 px-5 lg:grid-cols-4">
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
-              <Icon name={stat.icon} className="mx-auto h-9 w-9 text-white/70" />
-              <p className="mt-3 text-xl font-extrabold text-white">{stat.label}</p>
-              <p className="mt-1 text-base text-white/70">{stat.helper}</p>
+              <Icon name={stat.icon} className="mx-auto h-8 w-8 text-white/67" />
+              <p className="mt-3 text-lg font-extrabold leading-snug text-white sm:text-xl">{stat.label}</p>
+              <p className="mt-1 text-base text-white/68">{stat.helper}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section id="contact" className="mx-auto max-w-6xl px-4 py-12 text-center sm:px-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">Konnekt Business Directory</p>
-        <h2 className="mt-3 font-heading text-3xl font-bold">Ready to list, connect, and grow?</h2>
-        <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/60">
-          Register your profile now. The business directory style can be connected to the existing Konnekt networking platform, opportunities, messaging, and admin panel.
+      <section id="contact" className="mx-auto max-w-6xl px-5 py-12 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#D4AF37]">Konnekt Business Directory</p>
+        <h2 className="mt-3 font-serif text-3xl font-black uppercase text-white">List, connect, grow</h2>
+        <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/58">
+          Register to create your profile, find professionals, post opportunities, and connect with local businesses.
         </p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-          <Button className="bg-[#0B6B3A] hover:bg-[#095a31]" size="lg" onClick={() => navigate("/register")}>Register</Button>
+          <Button className="bg-[#003b1f] hover:bg-[#00502b]" size="lg" onClick={() => navigate("/register")}>Register</Button>
           <Button className="border-white/15 bg-white/5 text-white hover:bg-white/10" variant="outline" size="lg" onClick={() => navigate("/login")}>Login</Button>
+          {pwaInstall.canInstall ? (
+            <Button className="border-white/15 bg-white/5 text-white hover:bg-white/10" variant="outline" size="lg" onClick={() => void pwaInstall.installApp()}>
+              Install App
+            </Button>
+          ) : null}
         </div>
       </section>
+
+      {pwaInstall.canInstall ? (
+        <button
+          className="fixed bottom-5 right-5 z-50 rounded-2xl bg-[#003b1f] px-4 py-3 text-sm font-extrabold text-white shadow-2xl shadow-black/40 ring-1 ring-white/10"
+          type="button"
+          onClick={() => void pwaInstall.installApp()}
+        >
+          Install App
+        </button>
+      ) : null}
     </main>
   );
 }
@@ -2206,19 +2229,19 @@ function DirectorySection({
 }) {
   return (
     <div>
-      <h2 className="font-heading text-3xl font-extrabold uppercase tracking-wide text-white sm:text-4xl">{title}</h2>
-      <div className="mt-6 grid grid-cols-2 gap-4">
+      <h2 className="font-serif text-[2rem] font-black uppercase leading-none tracking-[-0.02em] text-white sm:text-4xl">{title}</h2>
+      <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5">
         {categories.map((category) => (
           <button
             key={category.title}
-            className="group overflow-hidden rounded-2xl bg-[#242424] text-left shadow-lg shadow-black/10 ring-1 ring-white/5 transition hover:-translate-y-1 hover:ring-[#0B6B3A]/60"
+            className="group overflow-hidden rounded-xl bg-[#202020] text-left shadow-lg shadow-black/10 ring-1 ring-white/[0.03] transition hover:-translate-y-0.5 hover:ring-[#008a58]/60"
             type="button"
           >
-            <div className="relative h-36 overflow-hidden sm:h-44">
+            <div className="relative h-[9.55rem] overflow-hidden sm:h-48">
               <img className="h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105 group-hover:opacity-90" src={category.image} alt={category.title} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+              <div className="absolute inset-0 bg-black/18" />
             </div>
-            <p className="px-3 py-3 text-center text-base font-semibold text-white sm:text-xl">{category.title}</p>
+            <p className="px-2 py-3 text-center text-[1.35rem] font-normal leading-tight text-white sm:text-2xl">{category.title}</p>
           </button>
         ))}
       </div>
