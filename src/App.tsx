@@ -78,7 +78,10 @@ type Opportunity = {
   title: string;
   description: string;
   type: OpportunityType;
+  industry?: string;
   location: string;
+  budget?: string;
+  deadline?: string;
   applyLink: string;
   posterId: string;
   status: OpportunityStatus;
@@ -149,7 +152,10 @@ type CreateOpportunityValues = {
   title: string;
   description: string;
   type: OpportunityType;
+  industry: string;
   location: string;
+  budget: string;
+  deadline: string;
   applyLink: string;
 };
 
@@ -476,7 +482,10 @@ function createSeedStore(): DemoStore {
         description:
           "A seed-stage fintech team is hiring a product designer to lead research, prototyping, and design systems for merchant finance tools.",
         type: "Job",
+        industry: "Technology",
         location: "Remote across Africa",
+        budget: "$2,500 - $4,000/month",
+        deadline: "2026-07-15",
         applyLink: "https://example.com/apply/product-designer",
         posterId: "user-kwame",
         status: "approved",
@@ -488,7 +497,10 @@ function createSeedStore(): DemoStore {
         description:
           "Climate operator looking for a logistics and retail partner to expand solar kits into peri-urban markets.",
         type: "Business",
+        industry: "Energy",
         location: "Lagos, Nigeria",
+        budget: "Revenue share",
+        deadline: "2026-08-01",
         applyLink: "",
         posterId: "user-fatima",
         status: "approved",
@@ -500,7 +512,10 @@ function createSeedStore(): DemoStore {
         description:
           "Seeking a brand strategist and ecommerce freelancer for a traceable cocoa export pilot with cooperatives in Ghana and Kenya.",
         type: "Collaboration",
+        industry: "Agribusiness",
         location: "Accra, Ghana",
+        budget: "Project-based",
+        deadline: "2026-07-30",
         applyLink: "",
         posterId: "user-nala",
         status: "approved",
@@ -512,7 +527,10 @@ function createSeedStore(): DemoStore {
         description:
           "Pending review: advisory support for an edtech company entering Rwanda and Senegal.",
         type: "Business",
+        industry: "Education",
         location: "Kigali, Rwanda",
+        budget: "Negotiable",
+        deadline: "2026-08-12",
         applyLink: "",
         posterId: "user-amina",
         status: "pending",
@@ -1043,8 +1061,8 @@ export default function App() {
 
   useEffect(() => {
     if (!authReady) return;
-    if (!currentUserId && !isAuthPath(path)) {
-      navigate("/login");
+    if (!currentUserId && path !== "/" && !isAuthPath(path)) {
+      navigate("/");
     }
     if (currentUserId && isAuthPath(path)) {
       navigate("/");
@@ -1326,7 +1344,10 @@ export default function App() {
       title: values.title.trim(),
       description: values.description.trim(),
       type: values.type,
+      industry: values.industry.trim() || "Professional Services",
       location: values.location.trim() || "Remote across Africa",
+      budget: values.budget.trim(),
+      deadline: values.deadline,
       applyLink: values.applyLink.trim(),
       posterId: currentUser.id,
       status: "pending",
@@ -1473,19 +1494,27 @@ export default function App() {
   }
 
   const authMode = getAuthMode(path);
-  if (!currentUserId || authMode) {
-    return (
-      <AuthPage
-        mode={authMode || "login"}
-        firebaseEnabled={isFirebaseConfigured}
-        onLogin={handleLogin}
-        onRegister={handleRegister}
-        onReset={handlePasswordReset}
-        onSocialLogin={handleSocialLogin}
-        onDemoLogin={handleDemoLogin}
-        navigate={navigate}
-      />
-    );
+  if (!currentUserId) {
+    if (authMode) {
+      return (
+        <AuthPage
+          mode={authMode}
+          firebaseEnabled={isFirebaseConfigured}
+          onLogin={handleLogin}
+          onRegister={handleRegister}
+          onReset={handlePasswordReset}
+          onSocialLogin={handleSocialLogin}
+          onDemoLogin={handleDemoLogin}
+          navigate={navigate}
+        />
+      );
+    }
+
+    return <LandingPage navigate={navigate} />;
+  }
+
+  if (authMode) {
+    return <FullScreenLoader label="Opening your Konnekt workspace" />;
   }
 
   if (loadingData && !currentUser) {
@@ -1878,6 +1907,15 @@ function Badge({
   );
 }
 
+function getInitials(name: string) {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+  return (parts.map((part) => part[0]).join("") || "K").toUpperCase();
+}
+
 function Avatar({
   user,
   size = "md",
@@ -1887,17 +1925,38 @@ function Avatar({
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }) {
+  const generatedAvatar = !user.photoUrl || user.photoUrl.includes("ui-avatars.com");
+  const sizeClasses = cn(
+    size === "sm" && "h-9 w-9 text-xs",
+    size === "md" && "h-12 w-12 text-sm",
+    size === "lg" && "h-16 w-16 text-lg",
+    size === "xl" && "h-24 w-24 text-2xl"
+  );
+
+  if (generatedAvatar) {
+    return (
+      <div
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0B6B3A] to-[#13965a] font-heading font-bold text-white shadow-sm ring-2 ring-white",
+          sizeClasses,
+          className
+        )}
+        aria-label={`${user.fullName} profile initials`}
+        title={user.fullName}
+      >
+        {getInitials(user.fullName)}
+      </div>
+    );
+  }
+
   return (
     <img
       className={cn(
         "shrink-0 rounded-full object-cover ring-2 ring-white",
-        size === "sm" && "h-9 w-9",
-        size === "md" && "h-12 w-12",
-        size === "lg" && "h-16 w-16",
-        size === "xl" && "h-24 w-24",
+        sizeClasses,
         className
       )}
-      src={user.photoUrl || avatarUrl(user.fullName)}
+      src={user.photoUrl}
       alt={`${user.fullName} profile`}
     />
   );
@@ -2003,6 +2062,184 @@ function DashboardSkeleton() {
         <SkeletonBlock className="h-48" />
       </div>
     </div>
+  );
+}
+
+function LandingPage({ navigate }: { navigate: (to: string) => void }) {
+  const featureCards = [
+    {
+      title: "Smart Networking",
+      description: "Connect with entrepreneurs, freelancers, investors, recruiters, and business builders who match your goals.",
+      icon: "network" as IconName,
+    },
+    {
+      title: "Business Opportunities",
+      description: "Discover jobs, projects, partnerships, joint ventures, and funding requests across African markets.",
+      icon: "briefcase" as IconName,
+    },
+    {
+      title: "Secure Messaging",
+      description: "Start focused one-to-one conversations after accepted connection requests â€” no file storage required for MVP chat.",
+      icon: "message" as IconName,
+    },
+    {
+      title: "Admin Moderation",
+      description: "Approve opportunity posts, verify profiles, suspend spam accounts, and track platform activity from one panel.",
+      icon: "shield" as IconName,
+    },
+  ];
+
+  const steps = ["Create Profile", "Build Network", "Discover Opportunities", "Grow Your Business"];
+  const audiences = ["Entrepreneurs", "Freelancers", "Investors", "Recruiters", "SMEs"];
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#F8FAF9] text-[#142019]">
+      <header className="sticky top-0 z-40 border-b border-white/60 bg-[#F8FAF9]/85 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <LogoMark />
+          <nav className="hidden items-center gap-6 text-sm font-semibold text-slate-600 md:flex">
+            <a className="hover:text-[#0B6B3A]" href="#features">Features</a>
+            <a className="hover:text-[#0B6B3A]" href="#how-it-works">How it works</a>
+            <a className="hover:text-[#0B6B3A]" href="#mvp">MVP</a>
+          </nav>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>Login</Button>
+            <Button size="sm" onClick={() => navigate("/register")}>Join Free</Button>
+          </div>
+        </div>
+      </header>
+
+      <section className="relative">
+        <div className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_20%_20%,rgba(212,175,55,0.28),transparent_24rem),linear-gradient(135deg,#052f1c,#0B6B3A_52%,#0e7d47)]" />
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-24">
+          <div className="flex flex-col justify-center text-white">
+            <Badge tone="gold" className="w-fit bg-white/15 text-[#F7D76B] ring-1 ring-white/15">Business Networking Platform for Africa</Badge>
+            <h1 className="mt-6 font-heading text-4xl font-extrabold leading-tight sm:text-6xl lg:text-7xl">
+              Connect with Professionals, Investors and Businesses Across Africa
+            </h1>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-white/82 sm:text-lg">
+              Discover opportunities, build partnerships, and grow your business with Konnekt â€” where African businesses connect.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button className="bg-[#D4AF37] text-[#241c06] hover:bg-[#c8a32f]" size="lg" onClick={() => navigate("/register")}>
+                Join Free <Icon name="arrow" className="h-5 w-5" />
+              </Button>
+              <Button className="border-white/20 bg-white/10 text-white hover:bg-white/20" variant="outline" size="lg" onClick={() => navigate("/login")}>
+                Explore Opportunities
+              </Button>
+            </div>
+            <div className="mt-10 flex flex-wrap gap-2">
+              {audiences.map((audience) => (
+                <span key={audience} className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/85 ring-1 ring-white/15">
+                  {audience}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative min-h-[34rem]">
+            <div className="absolute -right-10 top-6 h-72 w-72 rounded-full bg-[#D4AF37]/25 blur-3xl" />
+            <div className="relative overflow-hidden rounded-[2.2rem] bg-white/10 p-3 shadow-2xl shadow-emerald-950/30 ring-1 ring-white/20 backdrop-blur">
+              <img className="h-[32rem] w-full rounded-[1.7rem] object-cover" src={HERO_IMAGE_URL} alt="Professional African entrepreneurs collaborating" />
+              <div className="absolute inset-3 rounded-[1.7rem] bg-gradient-to-t from-[#052f1c]/85 via-transparent to-transparent" />
+              <div className="absolute bottom-8 left-8 right-8 rounded-3xl bg-white/92 p-5 text-[#142019] shadow-xl backdrop-blur">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Live MVP ready</p>
+                <h2 className="mt-2 font-heading text-2xl font-bold">Profiles, connections, messages and opportunities</h2>
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-semibold text-slate-600">
+                  <div className="rounded-2xl bg-[#F8FAF9] p-3"><span className="block font-heading text-xl text-[#0B6B3A]">6+</span>Seed profiles</div>
+                  <div className="rounded-2xl bg-[#F8FAF9] p-3"><span className="block font-heading text-xl text-[#0B6B3A]">4</span>Opportunities</div>
+                  <div className="rounded-2xl bg-[#F8FAF9] p-3"><span className="block font-heading text-xl text-[#0B6B3A]">Admin</span>Panel</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">Platform features</p>
+          <h2 className="mt-3 font-heading text-3xl font-bold sm:text-5xl">Built for opportunity discovery and trusted growth.</h2>
+          <p className="mt-4 text-sm leading-7 text-slate-500 sm:text-base">
+            The MVP focuses on the core features needed to launch quickly without Firebase Storage or paid upload infrastructure.
+          </p>
+        </div>
+        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {featureCards.map((feature) => (
+            <article key={feature.title} className="rounded-[2rem] bg-white p-6 shadow-sm shadow-slate-200/70 ring-1 ring-slate-200/70 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200">
+              <div className="flex h-13 w-13 items-center justify-center rounded-3xl bg-[#0B6B3A]/10 text-[#0B6B3A]">
+                <Icon name={feature.icon} className="h-6 w-6" />
+              </div>
+              <h3 className="mt-5 font-heading text-xl font-bold">{feature.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-slate-500">{feature.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="how-it-works" className="bg-white/70 py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">How it works</p>
+              <h2 className="mt-3 font-heading text-3xl font-bold sm:text-5xl">From profile to partnership in four steps.</h2>
+              <p className="mt-4 text-sm leading-7 text-slate-500">Konnekt helps members move from discovery to conversation to business action.</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {steps.map((step, index) => (
+                <div key={step} className="rounded-[2rem] bg-[#F8FAF9] p-6 ring-1 ring-slate-200/70">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#D4AF37] font-heading text-lg font-bold text-[#241c06]">{index + 1}</span>
+                  <h3 className="mt-5 font-heading text-xl font-bold">{step}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    {index === 0 && "Register with email or Google, then add your title, country, industry, skills, and bio."}
+                    {index === 1 && "Search professionals and send LinkedIn-style connection requests."}
+                    {index === 2 && "Browse approved opportunities, jobs, projects, investments, and collaborations."}
+                    {index === 3 && "Message accepted connections and turn trusted relationships into results."}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="mvp" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-5 lg:grid-cols-3">
+          <Panel className="lg:col-span-2">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">MVP build first</p>
+            <h2 className="mt-3 font-heading text-3xl font-bold">Launch-ready scope without Firebase Storage.</h2>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {["Registration/Login", "User Profiles", "Search Users", "Connection Requests", "Text Messaging", "Opportunity Listings", "Notifications", "Admin Panel"].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-2xl bg-[#F8FAF9] p-3 text-sm font-semibold text-slate-700">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0B6B3A] text-white"><Icon name="check" className="h-4 w-4" /></span>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </Panel>
+          <Panel className="bg-[#0B6B3A] text-white ring-[#0B6B3A]">
+            <h2 className="font-heading text-2xl font-bold">Storage-safe plan</h2>
+            <p className="mt-4 text-sm leading-7 text-white/80">
+              Profile images and file sharing can be delayed. Until then, Konnekt uses generated avatars and Firestore-only text data.
+            </p>
+            <Button className="mt-6 w-full bg-white text-[#0B6B3A] hover:bg-white/90" onClick={() => navigate("/register")}>Start building your profile</Button>
+          </Panel>
+        </div>
+      </section>
+
+      <footer className="border-t border-slate-200 bg-white py-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+          <LogoMark />
+          <div className="flex flex-wrap gap-4 text-sm font-semibold text-slate-500">
+            <a href="#features">About Us</a>
+            <a href="#mvp">Privacy Policy</a>
+            <a href="#mvp">Terms</a>
+            <a href="#mvp">Contact</a>
+            <a href="#how-it-works">FAQ</a>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }
 
@@ -2673,24 +2910,47 @@ function DashboardPage({
     .filter((connection) => connection.receiverId === currentUser.id && connection.status === "pending")
     .slice(0, 3);
   const connectedProfiles = getConnectedProfiles(currentUser.id, users, connections).slice(0, 5);
+  const acceptedConnectionCount = getAcceptedConnectionCount(currentUser.id, connections);
+  const approvedOpportunityCount = opportunities.filter((opportunity) => opportunity.status === "approved").length;
+  const profileCompletionItems = [
+    currentUser.fullName,
+    currentUser.professionalTitle,
+    currentUser.industry,
+    currentUser.location,
+    currentUser.bio,
+    currentUser.skills.length ? "skills" : "",
+  ];
+  const profileCompletion = Math.round(
+    (profileCompletionItems.filter(Boolean).length / profileCompletionItems.length) * 100
+  );
 
   if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1.35fr_0.9fr]">
       <div className="space-y-5">
-        <section className="animate-rise overflow-hidden rounded-[2rem] bg-[#0B6B3A] p-6 text-white shadow-xl shadow-emerald-900/10">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">Welcome section</p>
-              <h2 className="mt-4 font-heading text-3xl font-bold sm:text-4xl">Hello, {currentUser.fullName.split(" ")[0]}</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80">
-                Discover trusted professionals, respond to connection requests, and find opportunities that fit your profile.
-              </p>
+        <section className="animate-rise overflow-hidden rounded-[2rem] bg-[#0B6B3A] p-0 text-white shadow-xl shadow-emerald-900/10">
+          <div className="relative p-6 sm:p-7">
+            <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[#D4AF37]/25 blur-3xl" />
+            <div className="absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
+            <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">Your Konnekt workspace</p>
+                <h2 className="mt-4 font-heading text-3xl font-bold sm:text-5xl">Welcome back, {currentUser.fullName.split(" ")[0]}</h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80 sm:text-base">
+                  Build strategic partnerships, follow opportunity matches, and turn trusted African business relationships into growth.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="secondary" onClick={() => navigate("/opportunities")}><Icon name="plus" /> Post opportunity</Button>
+                <Button className="bg-white/10 text-white hover:bg-white/20" variant="ghost" onClick={() => navigate("/network")}>Find people</Button>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" onClick={() => navigate("/opportunities")}><Icon name="plus" /> Post opportunity</Button>
-              <Button className="bg-white/10 text-white hover:bg-white/20" variant="ghost" onClick={() => navigate("/network")}>Find people</Button>
+
+            <div className="relative mt-7 grid gap-3 sm:grid-cols-3">
+              <DashboardMetric label="Connections" value={acceptedConnectionCount} helper="Accepted network" />
+              <DashboardMetric label="Opportunities" value={approvedOpportunityCount} helper="Approved posts" />
+              <DashboardMetric label="Profile" value={`${profileCompletion}%`} helper="Completion score" />
             </div>
           </div>
         </section>
@@ -2805,6 +3065,16 @@ function SectionTitle({ title, action }: { title: string; action?: ReactNode }) 
     <div className="flex items-center justify-between gap-4">
       <h2 className="font-heading text-xl font-bold text-[#142019]">{title}</h2>
       {action}
+    </div>
+  );
+}
+
+function DashboardMetric({ label, value, helper }: { label: string; value: ReactNode; helper: string }) {
+  return (
+    <div className="rounded-3xl bg-white/12 p-4 ring-1 ring-white/15 backdrop-blur-sm">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">{label}</p>
+      <p className="mt-2 font-heading text-3xl font-bold text-white">{value}</p>
+      <p className="mt-1 text-xs text-white/65">{helper}</p>
     </div>
   );
 }
@@ -3299,7 +3569,10 @@ function OpportunitiesPage({
     title: "",
     description: "",
     type: "Job",
+    industry: "Technology",
     location: "Remote across Africa",
+    budget: "",
+    deadline: "",
     applyLink: "",
   });
 
@@ -3313,7 +3586,16 @@ function OpportunitiesPage({
     setError("");
     try {
       await onCreateOpportunity(values);
-      setValues({ title: "", description: "", type: "Job", location: "Remote across Africa", applyLink: "" });
+      setValues({
+        title: "",
+        description: "",
+        type: "Job",
+        industry: "Technology",
+        location: "Remote across Africa",
+        budget: "",
+        deadline: "",
+        applyLink: "",
+      });
       setShowForm(false);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Unable to create opportunity.");
@@ -3348,9 +3630,16 @@ function OpportunitiesPage({
             </div>
             <TextareaField label="Description" value={values.description} onChange={(event) => setValues((previous) => ({ ...previous, description: event.target.value }))} placeholder="Describe the role, deal, or collaboration." required />
             <div className="grid gap-4 md:grid-cols-2">
+              <SelectField label="Industry" value={values.industry} onChange={(event) => setValues((previous) => ({ ...previous, industry: event.target.value }))}>
+                {INDUSTRIES.map((industryName) => <option key={industryName}>{industryName}</option>)}
+              </SelectField>
               <SelectField label="Location" value={values.location} onChange={(event) => setValues((previous) => ({ ...previous, location: event.target.value }))}>
                 {LOCATIONS.map((locationName) => <option key={locationName}>{locationName}</option>)}
               </SelectField>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Field label="Budget" value={values.budget} onChange={(event) => setValues((previous) => ({ ...previous, budget: event.target.value }))} placeholder="$1,000, negotiable, equity" />
+              <Field label="Deadline" type="date" value={values.deadline} onChange={(event) => setValues((previous) => ({ ...previous, deadline: event.target.value }))} />
               <Field label="Apply link" value={values.applyLink} onChange={(event) => setValues((previous) => ({ ...previous, applyLink: event.target.value }))} placeholder="https://... (optional)" />
             </div>
             <Button type="submit" loading={submitting}>Publish opportunity</Button>
@@ -3409,7 +3698,12 @@ function OpportunityCard({
         <p className="text-xs font-semibold text-slate-400">{relativeTime(opportunity.createdAt)}</p>
       </div>
       <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">{opportunity.description}</p>
-      <div className="mt-4 flex items-center gap-2 text-sm text-slate-500"><Icon name="location" className="h-4 w-4 text-[#0B6B3A]" />{opportunity.location}</div>
+      <div className="mt-4 grid gap-2 text-sm text-slate-500 sm:grid-cols-2">
+        {opportunity.industry ? <span className="flex items-center gap-2"><Icon name="briefcase" className="h-4 w-4 text-[#0B6B3A]" />{opportunity.industry}</span> : null}
+        <span className="flex items-center gap-2"><Icon name="location" className="h-4 w-4 text-[#0B6B3A]" />{opportunity.location}</span>
+        {opportunity.budget ? <span className="font-semibold text-[#0B6B3A]">Budget: {opportunity.budget}</span> : null}
+        {opportunity.deadline ? <span>Deadline: {formatDate(opportunity.deadline)}</span> : null}
+      </div>
       <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
         <button className="flex min-w-0 items-center gap-3 text-left" type="button" onClick={() => poster && navigate(`/profile/${poster.id}`)}>
           {poster ? <Avatar user={poster} /> : <div className="h-12 w-12 rounded-full bg-slate-200" />}
@@ -3495,7 +3789,10 @@ function OpportunityDetailsPage({
         </div>
         <h1 className="mt-5 font-heading text-3xl font-bold text-[#142019] sm:text-4xl">{opportunity.title}</h1>
         <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-500">
+          {opportunity.industry ? <span className="flex items-center gap-2"><Icon name="briefcase" className="h-4 w-4 text-[#0B6B3A]" />{opportunity.industry}</span> : null}
           <span className="flex items-center gap-2"><Icon name="location" className="h-4 w-4 text-[#0B6B3A]" />{opportunity.location}</span>
+          {opportunity.budget ? <span>Budget: {opportunity.budget}</span> : null}
+          {opportunity.deadline ? <span>Deadline: {formatDate(opportunity.deadline)}</span> : null}
           <span>Posted {formatDate(opportunity.createdAt)}</span>
         </div>
         <p className="mt-8 whitespace-pre-line text-base leading-8 text-slate-600">{opportunity.description}</p>
@@ -4048,4 +4345,3 @@ function NotFound({ navigate }: { navigate: (to: string) => void }) {
     <EmptyState title="Page not found" description="The page you requested does not exist in Konnekt." action={<Button onClick={() => navigate("/")}>Go home</Button>} />
   );
 }
-
