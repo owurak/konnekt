@@ -2199,7 +2199,7 @@ function AuthPage({
 
               {mode !== "reset" ? (
                 <div className="mb-5 space-y-3">
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-3">
                     <Button
                       className="w-full"
                       type="button"
@@ -2211,17 +2211,7 @@ function AuthPage({
                       <span className="font-heading text-base">G</span>
                       Continue with Google
                     </Button>
-                    <Button
-                      className="w-full"
-                      type="button"
-                      variant="outline"
-                      disabled={!firebaseEnabled || Boolean(socialSubmitting)}
-                      loading={socialSubmitting === "apple"}
-                      onClick={() => void runSocialLogin("apple")}
-                    >
-                      <span className="font-heading text-base">A</span>
-                      Continue with Apple
-                    </Button>
+                   
                   </div>
                   {!firebaseEnabled ? (
                     <p className="text-center text-xs text-slate-500">Social sign-in appears after Firebase is connected.</p>
