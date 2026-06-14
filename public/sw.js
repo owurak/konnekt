@@ -1,4 +1,4 @@
-const SW_VERSION = "konnekt-pwa-v1";
+const SW_VERSION = "konnekt-pwa-v2-logo";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
