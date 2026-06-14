@@ -894,24 +894,36 @@ export default function App() {
       return undefined;
     }
 
-    return onAuthStateChanged(auth, (firebaseUser) => {
-      setCurrentUserId(firebaseUser ? firebaseUser.uid : null);
-      setAuthReady(true);
-    });
-  }, []);
+    let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
+    setAuthReady(false);
 
-  useEffect(() => {
-    if (!auth) return;
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
+    void (async () => {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        const result = await getRedirectResult(auth);
+        if (!cancelled && result?.user) {
           setCurrentUserId(result.user.uid);
           navigate("/");
         }
-      })
-      .catch((redirectError) => {
-        setRuntimeError(getSocialAuthErrorMessage(redirectError));
-      });
+      } catch (redirectError) {
+        if (!cancelled) {
+          setRuntimeError(getSocialAuthErrorMessage(redirectError));
+        }
+      }
+
+      if (!cancelled) {
+        unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+          setCurrentUserId(firebaseUser ? firebaseUser.uid : null);
+          setAuthReady(true);
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }, []);
 
   useEffect(() => {
