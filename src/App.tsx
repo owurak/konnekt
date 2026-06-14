@@ -88,6 +88,27 @@ type Opportunity = {
   createdAt: string;
 };
 
+type ListingStatus = "pending" | "approved";
+
+type BusinessListing = {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  location: string;
+  phone: string;
+  website: string;
+  verified: boolean;
+  price?: string;
+  condition?: string;
+  imageUrl?: string;
+  sellerId?: string;
+  sellerName?: string;
+  sellerEmail?: string;
+  status?: ListingStatus;
+  createdAt?: string;
+};
+
 type NotificationItem = {
   id: string;
   userId: string;
@@ -117,6 +138,7 @@ type DemoStore = {
   users: UserProfile[];
   connections: Connection[];
   opportunities: Opportunity[];
+  listings: BusinessListing[];
   notifications: NotificationItem[];
   messages: Message[];
 };
@@ -157,6 +179,18 @@ type CreateOpportunityValues = {
   budget: string;
   deadline: string;
   applyLink: string;
+};
+
+type CreateListingValues = {
+  name: string;
+  category: string;
+  description: string;
+  price: string;
+  condition: string;
+  location: string;
+  phone: string;
+  website: string;
+  imageUrl: string;
 };
 
 type AuthMode = "login" | "register" | "reset";
@@ -221,6 +255,153 @@ const LOCATIONS = [
 ];
 
 const OPPORTUNITY_TYPES: OpportunityType[] = ["Job", "Business", "Collaboration"];
+
+const BUSINESS_LISTINGS: BusinessListing[] = [
+  {
+    id: "beauty-1",
+    name: "Glow Beauty Studio",
+    category: "Beauty & Makeup",
+    description: "Makeup, brows, bridal styling, and beauty consultations for events and everyday confidence.",
+    location: "Accra, Ghana",
+    phone: "+233 24 000 1001",
+    website: "https://example.com/glow-beauty",
+    verified: true,
+    price: "From GHS 250",
+    condition: "Service",
+    imageUrl: "https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    sellerId: "user-amina",
+    sellerName: "Amina Ndlovu",
+    sellerEmail: "amina@konnekt.africa",
+    status: "approved",
+    createdAt: daysAgo(12),
+  },
+  {
+    id: "food-1",
+    name: "Fresh Basket Market",
+    category: "Groceries & Food",
+    description: "Fresh groceries, pantry supplies, local produce, and same-day food essentials.",
+    location: "Lagos, Nigeria",
+    phone: "+234 80 0000 1002",
+    website: "https://example.com/fresh-basket",
+    verified: true,
+    price: "From NGN 5,000",
+    condition: "New",
+    imageUrl: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    sellerId: "user-fatima",
+    sellerName: "Fatima Bello",
+    sellerEmail: "fatima@konnekt.africa",
+    status: "approved",
+    createdAt: daysAgo(10),
+  },
+  {
+    id: "electronics-1",
+    name: "TechHub Electronics",
+    category: "Electronics",
+    description: "Phones, laptops, accessories, repairs, and small business technology support.",
+    location: "Nairobi, Kenya",
+    phone: "+254 70 000 1003",
+    website: "https://example.com/techhub",
+    verified: false,
+    price: "From KES 2,500",
+    condition: "New / Used",
+    imageUrl: "https://images.pexels.com/photos/1841841/pexels-photo-1841841.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    sellerId: "user-chinedu",
+    sellerName: "Chinedu Okoro",
+    sellerEmail: "chinedu@konnekt.africa",
+    status: "approved",
+    createdAt: daysAgo(8),
+  },
+  {
+    id: "shoes-1",
+    name: "StepUp Footwear",
+    category: "Shoes & Footwear",
+    description: "Retail and custom footwear for professionals, students, events, and everyday wear.",
+    location: "Kumasi, Ghana",
+    phone: "+233 55 000 1004",
+    website: "https://example.com/stepup",
+    verified: true,
+    price: "From GHS 180",
+    condition: "New",
+    imageUrl: "https://images.pexels.com/photos/19090/pexels-photo.jpg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    sellerId: "user-kwame",
+    sellerName: "Kwame Mensah",
+    sellerEmail: "kwame@konnekt.africa",
+    status: "approved",
+    createdAt: daysAgo(7),
+  },
+  {
+    id: "printing-1",
+    name: "Prime Print Services",
+    category: "Printing Services",
+    description: "Flyers, banners, packaging labels, business cards, menus, and fast commercial printing.",
+    location: "Accra, Ghana",
+    phone: "+233 27 000 1005",
+    website: "https://example.com/prime-print",
+    verified: true,
+    price: "Quote on request",
+    condition: "Service",
+    imageUrl: "https://images.pexels.com/photos/5691622/pexels-photo-5691622.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    sellerId: "user-amina",
+    sellerName: "Amina Ndlovu",
+    sellerEmail: "amina@konnekt.africa",
+    status: "approved",
+    createdAt: daysAgo(6),
+  },
+  {
+    id: "fashion-1",
+    name: "Nia Fashion House",
+    category: "Fashion & Clothing",
+    description: "Ready-to-wear fashion, tailoring, African prints, styling, and boutique collections.",
+    location: "Cape Town, South Africa",
+    phone: "+27 60 000 1006",
+    website: "https://example.com/nia-fashion",
+    verified: false,
+    price: "From ZAR 450",
+    condition: "New",
+    imageUrl: "https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    sellerId: "user-nala",
+    sellerName: "Nala Wanjiku",
+    sellerEmail: "nala@konnekt.africa",
+    status: "approved",
+    createdAt: daysAgo(5),
+  },
+  {
+    id: "books-1",
+    name: "Bright Pages Bookshop",
+    category: "Books & Education",
+    description: "Books, school supplies, educational resources, exam prep materials, and learning tools.",
+    location: "Kigali, Rwanda",
+    phone: "+250 78 000 1007",
+    website: "https://example.com/bright-pages",
+    verified: true,
+    price: "From RWF 8,000",
+    condition: "New",
+    imageUrl: "https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    sellerId: "user-nala",
+    sellerName: "Nala Wanjiku",
+    sellerEmail: "nala@konnekt.africa",
+    status: "approved",
+    createdAt: daysAgo(4),
+  },
+  {
+    id: "phones-1",
+    name: "MobileMart Accessories",
+    category: "Phones & Accessories",
+    description: "Phone accessories, chargers, cases, screen protectors, repairs, and mobile gadgets.",
+    location: "Dakar, Senegal",
+    phone: "+221 77 000 1008",
+    website: "https://example.com/mobilemart",
+    verified: true,
+    price: "From XOF 7,500",
+    condition: "New",
+    imageUrl: "https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    sellerId: "user-chinedu",
+    sellerName: "Chinedu Okoro",
+    sellerEmail: "chinedu@konnekt.africa",
+    status: "approved",
+    createdAt: daysAgo(3),
+  },
+];
 
 function nowIso() {
   return new Date().toISOString();
@@ -475,6 +656,7 @@ function createSeedStore(): DemoStore {
         createdAt: daysAgo(2),
       },
     ],
+    listings: BUSINESS_LISTINGS,
     opportunities: [
       {
         id: "opportunity-fintech-designer",
@@ -590,6 +772,7 @@ function loadDemoStore() {
   try {
     const parsed = JSON.parse(stored) as DemoStore;
     if (!Array.isArray(parsed.users) || !Array.isArray(parsed.accounts)) return createSeedStore();
+    if (!Array.isArray(parsed.listings)) parsed.listings = BUSINESS_LISTINGS;
     return parsed;
   } catch {
     return createSeedStore();
@@ -866,6 +1049,9 @@ export default function App() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>(() =>
     isFirebaseConfigured ? [] : initialDemoStore.opportunities
   );
+  const [listings, setListings] = useState<BusinessListing[]>(() =>
+    isFirebaseConfigured ? [] : initialDemoStore.listings
+  );
   const [notifications, setNotifications] = useState<NotificationItem[]>(() =>
     isFirebaseConfigured ? [] : initialDemoStore.notifications
   );
@@ -943,6 +1129,19 @@ export default function App() {
 
   useEffect(() => {
     const firestore = db;
+    if (!firestore || currentUserId) return undefined;
+
+    const unsubscribePublicListings = onSnapshot(
+      query(collection(firestore, "listings"), where("status", "==", "approved")),
+      (snapshot) => setListings(mapSnapshot<BusinessListing>(snapshot)),
+      (error) => setRuntimeError(error.message)
+    );
+
+    return () => unsubscribePublicListings();
+  }, [currentUserId]);
+
+  useEffect(() => {
+    const firestore = db;
     if (!firestore || !currentUserId) {
       if (isFirebaseConfigured) {
         setLoadingData(false);
@@ -1002,6 +1201,11 @@ export default function App() {
       (snapshot) => setOpportunities(mapSnapshot<Opportunity>(snapshot)),
       handleSnapshotError
     );
+    const unsubscribeListings = onSnapshot(
+      collection(firestore, "listings"),
+      (snapshot) => setListings(mapSnapshot<BusinessListing>(snapshot)),
+      handleSnapshotError
+    );
     const unsubscribeNotifications = onSnapshot(
       query(collection(firestore, "notifications"), where("userId", "==", currentUserId)),
       (snapshot) => setNotifications(mapSnapshot<NotificationItem>(snapshot)),
@@ -1040,6 +1244,7 @@ export default function App() {
       unsubscribeSentConnections();
       unsubscribeReceivedConnections();
       unsubscribeOpportunities();
+      unsubscribeListings();
       unsubscribeNotifications();
       unsubscribeSentMessages();
       unsubscribeReceivedMessages();
@@ -1054,10 +1259,11 @@ export default function App() {
       users,
       connections,
       opportunities,
+      listings,
       notifications,
       messages,
     });
-  }, [accounts, currentUserId, users, connections, opportunities, notifications, messages]);
+  }, [accounts, currentUserId, users, connections, opportunities, listings, notifications, messages]);
 
   useEffect(() => {
     if (!authReady) return;
@@ -1402,6 +1608,60 @@ export default function App() {
     setOpportunities((previous) => previous.filter((opportunity) => opportunity.id !== opportunityId));
   };
 
+  const createListing = async (values: CreateListingValues) => {
+    if (!currentUser) throw new Error("Sign in before posting a listing.");
+    const listing: BusinessListing = {
+      id: newId("listing"),
+      name: values.name.trim(),
+      category: values.category,
+      description: values.description.trim(),
+      price: values.price.trim(),
+      condition: values.condition,
+      location: values.location.trim() || currentUser.location || "Remote across Africa",
+      phone: values.phone.trim(),
+      website: values.website.trim(),
+      imageUrl: values.imageUrl.trim(),
+      verified: currentUser.verified,
+      sellerId: currentUser.id,
+      sellerName: currentUser.fullName,
+      sellerEmail: currentUser.email,
+      status: isAdminUser(currentUser) ? "approved" : "pending",
+      createdAt: nowIso(),
+    };
+
+    if (!listing.name || !listing.description || !listing.category) {
+      throw new Error("Add a title, category, and description before posting.");
+    }
+
+    if (db) {
+      await setDoc(doc(db, "listings", listing.id), listing);
+    } else {
+      setListings((previous) => [listing, ...previous]);
+    }
+  };
+
+  const updateListing = async (listingId: string, patch: Partial<BusinessListing>) => {
+    if (db) {
+      await setDoc(doc(db, "listings", listingId), patch, { merge: true });
+      return;
+    }
+    setListings((previous) =>
+      previous.map((listing) => (listing.id === listingId ? { ...listing, ...patch } : listing))
+    );
+  };
+
+  const approveListing = async (listingId: string) => {
+    await updateListing(listingId, { status: "approved" });
+  };
+
+  const deleteListing = async (listingId: string) => {
+    if (db) {
+      await deleteDoc(doc(db, "listings", listingId));
+      return;
+    }
+    setListings((previous) => previous.filter((listing) => listing.id !== listingId));
+  };
+
   const uploadProfilePhoto = async (file: File) => {
     if (!currentUser) throw new Error("Sign in before uploading a photo.");
     const uploadFile = await optimizeProfilePhotoFile(file);
@@ -1463,6 +1723,9 @@ export default function App() {
       seed.opportunities.forEach((opportunity) =>
         batch.set(doc(firestore, "opportunities", opportunity.id), opportunity)
       );
+      seed.listings.forEach((listing) =>
+        batch.set(doc(firestore, "listings", listing.id), listing)
+      );
       seed.notifications.forEach((notification) =>
         batch.set(doc(firestore, "notifications", notification.id), notification)
       );
@@ -1481,6 +1744,7 @@ export default function App() {
     setUsers(seed.users);
     setConnections(seed.connections);
     setOpportunities(seed.opportunities);
+    setListings(seed.listings);
     setNotifications(seed.notifications);
     setMessages(seed.messages);
   };
@@ -1510,7 +1774,7 @@ export default function App() {
       );
     }
 
-    return <LandingPage navigate={navigate} />;
+    return <LandingPage navigate={navigate} listings={listings} />;
   }
 
   if (authMode) {
@@ -1538,12 +1802,14 @@ export default function App() {
           users={users}
           connections={connections}
           opportunities={opportunities}
+          listings={listings}
           notifications={notifications}
           loading={loadingData}
           navigate={navigate}
           onConnect={handleSendConnection}
           onRespondConnection={handleRespondConnection}
           onMarkNotificationRead={markNotificationRead}
+          onCreateListing={createListing}
         />
       );
     }
@@ -1653,11 +1919,14 @@ export default function App() {
           users={users}
           connections={connections}
           opportunities={opportunities}
+          listings={listings}
           messages={messages}
           notifications={notifications}
           onSaveUser={saveUserProfile}
           onApproveOpportunity={approveOpportunity}
           onDeleteOpportunity={deleteOpportunity}
+          onApproveListing={approveListing}
+          onDeleteListing={deleteListing}
           onSeedDemoData={seedDemoData}
         />
       );
@@ -2065,8 +2334,10 @@ function DashboardSkeleton() {
   );
 }
 
-function LandingPage({ navigate }: { navigate: (to: string) => void }) {
+function LandingPage({ navigate, listings }: { navigate: (to: string) => void; listings: BusinessListing[] }) {
   const pwaInstall = usePwaInstallPrompt();
+  const [selectedCategory, setSelectedCategory] = useState("Beauty & Makeup");
+  const [directorySearch, setDirectorySearch] = useState("");
   const featuredCategories = [
     {
       title: "Beauty & Makeup",
@@ -2112,8 +2383,30 @@ function LandingPage({ navigate }: { navigate: (to: string) => void }) {
     { label: "Verified Listings", helper: "Trusted businesses", icon: "shield" as IconName },
   ];
 
-  const scrollToCategories = () => {
-    document.getElementById("categories")?.scrollIntoView({ behavior: "smooth" });
+  const publicListings = listings.length ? listings : BUSINESS_LISTINGS;
+  const visibleBusinesses = getDirectoryMatches(selectedCategory, directorySearch, publicListings);
+
+  const selectCategory = (category: string) => {
+    setSelectedCategory(category);
+    setDirectorySearch("");
+    document.getElementById("business-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const runSearch = () => {
+    if (!directorySearch.trim() && !selectedCategory) setSelectedCategory("Beauty & Makeup");
+    scrollToSection("business-results");
+  };
+
+  const handleInstall = async () => {
+    if (pwaInstall.canInstall) {
+      await pwaInstall.installApp();
+      return;
+    }
+    window.alert("To install Konnekt, open your browser menu and choose Install app or Add to Home screen.");
   };
 
   return (
@@ -2123,18 +2416,12 @@ function LandingPage({ navigate }: { navigate: (to: string) => void }) {
         <div className="relative mx-auto max-w-5xl">
           <p className="text-xs font-medium uppercase tracking-[0.35em] text-white/32">Business Directory</p>
           <div className="mt-3 flex items-center justify-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#d9dedb] font-serif text-base font-bold italic text-[#003b1f] shadow-lg">
-              K
-            </div>
-            <h1 className="font-serif text-[3.15rem] font-black uppercase leading-none tracking-[-0.03em] text-white drop-shadow sm:text-7xl">
-              KONNEKT
-            </h1>
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#d9dedb] font-serif text-base font-bold italic text-[#003b1f] shadow-lg">K</div>
+            <h1 className="font-serif text-[3.15rem] font-black uppercase leading-none tracking-[-0.03em] text-white drop-shadow sm:text-7xl">KONNEKT</h1>
           </div>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/86 sm:text-lg">
-            Find, connect & do business with local entrepreneurs
-          </p>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/86 sm:text-lg">Find, connect & do business with local entrepreneurs</p>
           <div className="mt-6 flex justify-center gap-3">
-            <button className="rounded-full border border-white/12 bg-[#00361d] px-5 py-2 text-sm font-medium text-white/90 transition hover:bg-white/10" type="button" onClick={scrollToCategories}>Find</button>
+            <button className="rounded-full border border-white/12 bg-[#00361d] px-5 py-2 text-sm font-medium text-white/90 transition hover:bg-white/10" type="button" onClick={() => scrollToSection("categories")}>Find</button>
             <button className="rounded-full border border-white/12 bg-[#00361d] px-5 py-2 text-sm font-medium text-white/90 transition hover:bg-white/10" type="button" onClick={() => navigate("/login")}>Connect</button>
             <button className="rounded-full border border-white/12 bg-[#00361d] px-5 py-2 text-sm font-medium text-white/90 transition hover:bg-white/10" type="button" onClick={() => navigate("/register")}>Grow</button>
           </div>
@@ -2143,16 +2430,12 @@ function LandingPage({ navigate }: { navigate: (to: string) => void }) {
 
       <header className="sticky top-0 z-40 border-b border-[#3a3a3a] bg-[#242424]">
         <div className="mx-auto flex max-w-6xl items-center gap-7 overflow-x-auto px-5 py-4 text-base font-medium text-white/90 sm:justify-center">
-          <a className="shrink-0 border-b-4 border-[#008a58] pb-2 text-white" href="#home">Home</a>
-          <a className="shrink-0 pb-2 hover:text-white" href="#categories">Categories</a>
-          <a className="shrink-0 pb-2 hover:text-white" href="#about">About Us</a>
+          <button className="shrink-0 border-b-4 border-[#008a58] pb-2 text-white" type="button" onClick={() => scrollToSection("home")}>Home</button>
+          <button className="shrink-0 pb-2 hover:text-white" type="button" onClick={() => scrollToSection("categories")}>Categories</button>
+          <button className="shrink-0 pb-2 hover:text-white" type="button" onClick={() => scrollToSection("about")}>About Us</button>
           <button className="shrink-0 pb-2 hover:text-white" type="button" onClick={() => navigate("/register")}>Register</button>
-          <a className="shrink-0 pb-2 hover:text-white" href="#contact">Contact Us</a>
-          {pwaInstall.canInstall ? (
-            <button className="shrink-0 rounded-full bg-[#003b1f] px-4 py-2 text-sm font-bold text-white" type="button" onClick={() => void pwaInstall.installApp()}>
-              Install
-            </button>
-          ) : null}
+          <button className="shrink-0 pb-2 hover:text-white" type="button" onClick={() => scrollToSection("contact")}>Contact Us</button>
+          <button className="shrink-0 rounded-full bg-[#003b1f] px-4 py-2 text-sm font-bold text-white" type="button" onClick={() => void handleInstall()}>Install</button>
         </div>
       </header>
 
@@ -2163,69 +2446,90 @@ function LandingPage({ navigate }: { navigate: (to: string) => void }) {
             <input
               className="h-[3.35rem] w-full rounded-xl border border-[#555663] bg-[#2a2a2a] pl-12 pr-4 text-base text-white outline-none placeholder:text-white/42 focus:border-[#008a58] focus:ring-2 focus:ring-[#008a58]/25"
               placeholder="Search business categories..."
+              value={directorySearch}
+              onChange={(event) => setDirectorySearch(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") runSearch();
+              }}
             />
           </label>
-          <button className="h-[3.35rem] rounded-xl bg-[#003b1f] px-6 text-base font-extrabold text-white transition hover:bg-[#00502b]" type="button" onClick={scrollToCategories}>
-            Search
-          </button>
+          <button className="h-[3.35rem] rounded-xl bg-[#003b1f] px-6 text-base font-extrabold text-white transition hover:bg-[#00502b]" type="button" onClick={runSearch}>Search</button>
         </div>
       </section>
 
       <section id="categories" className="mx-auto max-w-6xl px-5 py-10">
-        <DirectorySection title="Featured Categories" categories={featuredCategories} />
+        <DirectorySection title="Featured Categories" categories={featuredCategories} selectedCategory={selectedCategory} onSelect={selectCategory} />
         <div className="mt-14">
-          <DirectorySection title="More Categories" categories={moreCategories} />
+          <DirectorySection title="More Categories" categories={moreCategories} selectedCategory={selectedCategory} onSelect={selectCategory} />
+        </div>
+        <div id="business-results" className="mt-12 scroll-mt-24">
+          <BusinessResults title={directorySearch ? `Search results for “${directorySearch}”` : selectedCategory} businesses={visibleBusinesses} />
         </div>
       </section>
 
-      <section id="about" className="bg-[#003b1f] py-9">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-4 gap-y-8 px-5 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <Icon name={stat.icon} className="mx-auto h-8 w-8 text-white/67" />
-              <p className="mt-3 text-lg font-extrabold leading-snug text-white sm:text-xl">{stat.label}</p>
-              <p className="mt-1 text-base text-white/68">{stat.helper}</p>
-            </div>
-          ))}
+      <section id="about" className="scroll-mt-24 bg-[#003b1f] py-9">
+        <div className="mx-auto max-w-6xl px-5">
+          <div className="mb-8 text-center">
+            <h2 className="font-serif text-3xl font-black uppercase text-white">About Us</h2>
+            <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-white/70">
+              Konnekt helps customers discover trusted local businesses and helps entrepreneurs, freelancers, SMEs, and professionals build stronger networks across Africa.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4">
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <Icon name={stat.icon} className="mx-auto h-8 w-8 text-white/67" />
+                <p className="mt-3 text-lg font-extrabold leading-snug text-white sm:text-xl">{stat.label}</p>
+                <p className="mt-1 text-base text-white/68">{stat.helper}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section id="contact" className="mx-auto max-w-6xl px-5 py-12 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#D4AF37]">Konnekt Business Directory</p>
+      <section id="contact" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-12 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#D4AF37]">Contact Us</p>
         <h2 className="mt-3 font-serif text-3xl font-black uppercase text-white">List, connect, grow</h2>
         <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/58">
-          Register to create your profile, find professionals, post opportunities, and connect with local businesses.
+          Want your business listed? Register your Konnekt profile, post opportunities, or contact the platform team at hello@konnekt.africa.
         </p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Button className="bg-[#003b1f] hover:bg-[#00502b]" size="lg" onClick={() => navigate("/register")}>Register</Button>
           <Button className="border-white/15 bg-white/5 text-white hover:bg-white/10" variant="outline" size="lg" onClick={() => navigate("/login")}>Login</Button>
-          {pwaInstall.canInstall ? (
-            <Button className="border-white/15 bg-white/5 text-white hover:bg-white/10" variant="outline" size="lg" onClick={() => void pwaInstall.installApp()}>
-              Install App
-            </Button>
-          ) : null}
+          <Button className="border-white/15 bg-white/5 text-white hover:bg-white/10" variant="outline" size="lg" onClick={() => void handleInstall()}>Install App</Button>
         </div>
       </section>
-
-      {pwaInstall.canInstall ? (
-        <button
-          className="fixed bottom-5 right-5 z-50 rounded-2xl bg-[#003b1f] px-4 py-3 text-sm font-extrabold text-white shadow-2xl shadow-black/40 ring-1 ring-white/10"
-          type="button"
-          onClick={() => void pwaInstall.installApp()}
-        >
-          Install App
-        </button>
-      ) : null}
     </main>
   );
+}
+
+function getDirectoryMatches(category: string, search: string, source: BusinessListing[] = BUSINESS_LISTINGS) {
+  const query = normalize(search);
+  return source
+    .filter((business) => (business.status || "approved") === "approved" || business.status === "pending")
+    .filter((business) => {
+      const matchesCategory = !category || business.category === category;
+      const matchesSearch =
+        !query ||
+        [business.name, business.category, business.description, business.location, business.sellerName, business.price]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      return matchesSearch && (query ? true : matchesCategory);
+    })
+    .sort((a, b) => new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime());
 }
 
 function DirectorySection({
   title,
   categories,
+  selectedCategory,
+  onSelect,
 }: {
   title: string;
   categories: Array<{ title: string; image: string }>;
+  selectedCategory: string;
+  onSelect: (category: string) => void;
 }) {
   return (
     <div>
@@ -2234,8 +2538,12 @@ function DirectorySection({
         {categories.map((category) => (
           <button
             key={category.title}
-            className="group overflow-hidden rounded-xl bg-[#202020] text-left shadow-lg shadow-black/10 ring-1 ring-white/[0.03] transition hover:-translate-y-0.5 hover:ring-[#008a58]/60"
+            className={cn(
+              "group overflow-hidden rounded-xl bg-[#202020] text-left shadow-lg shadow-black/10 ring-1 ring-white/[0.03] transition hover:-translate-y-0.5 hover:ring-[#008a58]/60",
+              selectedCategory === category.title && "ring-2 ring-[#008a58]"
+            )}
             type="button"
+            onClick={() => onSelect(category.title)}
           >
             <div className="relative h-[9.55rem] overflow-hidden sm:h-48">
               <img className="h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105 group-hover:opacity-90" src={category.image} alt={category.title} />
@@ -2246,6 +2554,140 @@ function DirectorySection({
         ))}
       </div>
     </div>
+  );
+}
+
+function BusinessResults({ title, businesses }: { title: string; businesses: BusinessListing[] }) {
+  return (
+    <div>
+      <div className="flex items-end justify-between gap-4">
+        <h2 className="font-serif text-3xl font-black uppercase text-white">{title || "Listings"}</h2>
+        <span className="rounded-full bg-[#003b1f] px-3 py-1 text-xs font-bold text-white">{businesses.length} found</span>
+      </div>
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
+        {businesses.length ? businesses.map((business) => (
+          <article key={business.id} className="overflow-hidden rounded-2xl bg-[#242424] ring-1 ring-white/10">
+            <div className="relative h-44 bg-[#1b1b1b]">
+              {business.imageUrl ? (
+                <img className="h-full w-full object-cover opacity-85" src={business.imageUrl} alt={business.name} />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-[#003b1f] text-center font-serif text-2xl font-black uppercase text-white/70">
+                  {business.category}
+                </div>
+              )}
+              <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                {business.verified ? <Badge tone="green">Verified</Badge> : <Badge>New seller</Badge>}
+                {business.status === "pending" ? <Badge tone="red">Pending approval</Badge> : null}
+              </div>
+              {business.price ? (
+                <div className="absolute bottom-3 left-3 rounded-full bg-[#D4AF37] px-3 py-1 text-sm font-extrabold text-[#241c06]">
+                  {business.price}
+                </div>
+              ) : null}
+            </div>
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-heading text-lg font-bold text-white">{business.name}</h3>
+                  <p className="mt-1 text-sm font-semibold text-[#D4AF37]">{business.category}</p>
+                </div>
+                {business.condition ? <Badge tone="primary">{business.condition}</Badge> : null}
+              </div>
+              <p className="mt-3 text-sm leading-6 text-white/65">{business.description}</p>
+              <div className="mt-4 grid gap-2 text-sm text-white/60">
+                <span className="flex items-center gap-2"><Icon name="location" className="h-4 w-4 text-[#008a58]" />{business.location}</span>
+                <span className="flex items-center gap-2"><Icon name="user" className="h-4 w-4 text-[#008a58]" />Seller: {business.sellerName || "Konnekt seller"}</span>
+                <span className="flex items-center gap-2"><Icon name="mail" className="h-4 w-4 text-[#008a58]" />{business.phone || business.sellerEmail || "Contact seller in app"}</span>
+                {business.website ? <span className="flex items-center gap-2 break-all"><Icon name="link" className="h-4 w-4 text-[#008a58]" />{business.website}</span> : null}
+              </div>
+            </div>
+          </article>
+        )) : (
+          <div className="rounded-2xl border border-dashed border-white/15 p-6 text-center text-white/60 md:col-span-2">
+            No businesses found. Try another category or search term.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CreateListingPanel({
+  currentUser,
+  onCreateListing,
+  onCancel,
+}: {
+  currentUser: UserProfile;
+  onCreateListing: (values: CreateListingValues) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [values, setValues] = useState<CreateListingValues>({
+    name: "",
+    category: "Beauty & Makeup",
+    description: "",
+    price: "",
+    condition: "New",
+    location: currentUser.location || "Remote across Africa",
+    phone: "",
+    website: "",
+    imageUrl: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    try {
+      await onCreateListing(values);
+    } catch (listingError) {
+      setError(listingError instanceof Error ? listingError.message : "Unable to post listing.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Panel>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">Jiji-style marketplace</p>
+          <h2 className="mt-1 font-heading text-2xl font-bold text-[#142019]">Post a product, service, or business listing</h2>
+          <p className="mt-1 text-sm text-slate-500">Seller details are taken from your registered profile: {currentUser.fullName}.</p>
+        </div>
+        <Button variant="ghost" type="button" onClick={onCancel}>Close</Button>
+      </div>
+      {error ? <div className="mt-4"><ErrorMessage message={error} /></div> : null}
+      <form className="mt-5 space-y-4" onSubmit={submit}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Listing title" value={values.name} onChange={(event) => setValues((previous) => ({ ...previous, name: event.target.value }))} placeholder="iPhone 13 Pro / Makeup service / Printing package" required />
+          <SelectField label="Category" value={values.category} onChange={(event) => setValues((previous) => ({ ...previous, category: event.target.value }))}>
+            {["Beauty & Makeup", "Groceries & Food", "Electronics", "Shoes & Footwear", "Printing Services", "Fashion & Clothing", "Books & Education", "Phones & Accessories"].map((category) => <option key={category}>{category}</option>)}
+          </SelectField>
+        </div>
+        <TextareaField label="Description" value={values.description} onChange={(event) => setValues((previous) => ({ ...previous, description: event.target.value }))} placeholder="Describe the product/service, quality, delivery, and what buyers should know." required />
+        <div className="grid gap-4 md:grid-cols-3">
+          <Field label="Price" value={values.price} onChange={(event) => setValues((previous) => ({ ...previous, price: event.target.value }))} placeholder="GHS 500 / Negotiable" />
+          <SelectField label="Condition" value={values.condition} onChange={(event) => setValues((previous) => ({ ...previous, condition: event.target.value }))}>
+            {['New', 'Used', 'Service', 'Wholesale', 'Negotiable'].map((condition) => <option key={condition}>{condition}</option>)}
+          </SelectField>
+          <Field label="Location" value={values.location} onChange={(event) => setValues((previous) => ({ ...previous, location: event.target.value }))} />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Field label="Phone / WhatsApp" value={values.phone} onChange={(event) => setValues((previous) => ({ ...previous, phone: event.target.value }))} placeholder="+233..." />
+          <Field label="Website/social link" value={values.website} onChange={(event) => setValues((previous) => ({ ...previous, website: event.target.value }))} placeholder="https://..." />
+          <Field label="Image URL" value={values.imageUrl} onChange={(event) => setValues((previous) => ({ ...previous, imageUrl: event.target.value }))} placeholder="Paste image link for now" helper="No Firebase Storage needed. Uploads can be added later with Cloudinary or Storage." />
+        </div>
+        <div className="rounded-2xl bg-[#F8FAF9] p-4 text-sm leading-6 text-slate-600">
+          <strong>Approval:</strong> normal member listings are submitted for admin approval before appearing publicly. Admin listings publish immediately.
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" loading={submitting}>Post listing</Button>
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        </div>
+      </form>
+    </Panel>
   );
 }
 
@@ -2671,6 +3113,13 @@ function AppShell({
   const allItems = [...navigationItems, settingsItem, ...adminItem];
   const mobileItems = navigationItems;
   const pwaInstall = usePwaInstallPrompt();
+  const handleInstallClick = async () => {
+    if (pwaInstall.canInstall) {
+      await pwaInstall.installApp();
+      return;
+    }
+    window.alert("To install Konnekt, open your browser menu and choose Install app or Add to Home screen.");
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAF9] text-[#142019]">
@@ -2712,16 +3161,14 @@ function AppShell({
               <h1 className="font-heading text-2xl font-bold text-[#142019]">{pageTitle(path)}</h1>
             </div>
             <div className="flex items-center gap-2">
-              {pwaInstall.canInstall ? (
-                <button
-                  className="hidden h-11 items-center justify-center gap-2 rounded-2xl border border-[#0B6B3A]/20 bg-white px-3 text-sm font-bold text-[#0B6B3A] shadow-sm transition hover:bg-[#0B6B3A]/10 sm:flex"
-                  type="button"
-                  onClick={() => void pwaInstall.installApp()}
-                >
-                  <Icon name="plus" className="h-4 w-4" />
-                  Install
-                </button>
-              ) : null}
+              <button
+                className="hidden h-11 items-center justify-center gap-2 rounded-2xl border border-[#0B6B3A]/20 bg-white px-3 text-sm font-bold text-[#0B6B3A] shadow-sm transition hover:bg-[#0B6B3A]/10 sm:flex"
+                type="button"
+                onClick={() => void handleInstallClick()}
+              >
+                <Icon name="plus" className="h-4 w-4" />
+                Install
+              </button>
               <button
                 className={cn(
                   "flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:text-[#0B6B3A]",
@@ -2800,17 +3247,15 @@ function AppShell({
         </button>
       ) : null}
 
-      {pwaInstall.canInstall ? (
-        <button
-          className="fixed bottom-40 right-4 z-50 inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#0B6B3A] shadow-xl shadow-slate-900/20 ring-1 ring-[#0B6B3A]/15 transition hover:bg-[#0B6B3A]/10 sm:hidden"
-          type="button"
-          onClick={() => void pwaInstall.installApp()}
-          aria-label="Install Konnekt app"
-        >
-          <Icon name="plus" className="h-5 w-5" />
-          Install
-        </button>
-      ) : null}
+      <button
+        className="fixed bottom-40 right-4 z-50 inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#0B6B3A] shadow-xl shadow-slate-900/20 ring-1 ring-[#0B6B3A]/15 transition hover:bg-[#0B6B3A]/10 sm:hidden"
+        type="button"
+        onClick={() => void handleInstallClick()}
+        aria-label="Install Konnekt app"
+      >
+        <Icon name="plus" className="h-5 w-5" />
+        Install
+      </button>
 
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 px-1 pt-1.5 shadow-2xl shadow-slate-900/10 backdrop-blur-xl lg:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
@@ -2884,24 +3329,32 @@ function DashboardPage({
   users,
   connections,
   opportunities,
+  listings,
   notifications,
   loading,
   navigate,
   onConnect,
   onRespondConnection,
   onMarkNotificationRead,
+  onCreateListing,
 }: {
   currentUser: UserProfile;
   users: UserProfile[];
   connections: Connection[];
   opportunities: Opportunity[];
+  listings: BusinessListing[];
   notifications: NotificationItem[];
   loading: boolean;
   navigate: (to: string) => void;
   onConnect: (receiverId: string) => Promise<void>;
   onRespondConnection: (connectionId: string, status: "accepted" | "rejected") => Promise<void>;
   onMarkNotificationRead: (notificationId: string) => Promise<void>;
+  onCreateListing: (values: CreateListingValues) => Promise<void>;
 }) {
+  const [selectedDashboardCategory, setSelectedDashboardCategory] = useState("Beauty & Makeup");
+  const [dashboardSearch, setDashboardSearch] = useState("");
+  const [showListingForm, setShowListingForm] = useState(false);
+  const [listingSuccess, setListingSuccess] = useState("");
   const visibleOpportunities = opportunities
     .filter((opportunity) => canViewOpportunity(opportunity, currentUser))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -2929,37 +3382,135 @@ function DashboardPage({
   const profileCompletion = Math.round(
     (profileCompletionItems.filter(Boolean).length / profileCompletionItems.length) * 100
   );
+  const dashboardCategories = [
+    {
+      title: "Beauty & Makeup",
+      image: "https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    },
+    {
+      title: "Groceries & Food",
+      image: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    },
+    {
+      title: "Electronics",
+      image: "https://images.pexels.com/photos/1841841/pexels-photo-1841841.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    },
+    {
+      title: "Shoes & Footwear",
+      image: "https://images.pexels.com/photos/19090/pexels-photo.jpg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
+    },
+  ];
+  const visibleListings = listings.filter(
+    (listing) => listing.status === "approved" || listing.sellerId === currentUser.id || isAdminUser(currentUser)
+  );
+  const dashboardBusinesses = getDirectoryMatches(selectedDashboardCategory, dashboardSearch, visibleListings);
 
   if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1.35fr_0.9fr]">
       <div className="space-y-5">
-        <section className="animate-rise overflow-hidden rounded-[2rem] bg-[#0B6B3A] p-0 text-white shadow-xl shadow-emerald-900/10">
-          <div className="relative p-6 sm:p-7">
-            <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[#D4AF37]/25 blur-3xl" />
-            <div className="absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-            <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">Your Konnekt workspace</p>
-                <h2 className="mt-4 font-heading text-3xl font-bold sm:text-5xl">Welcome back, {currentUser.fullName.split(" ")[0]}</h2>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/80 sm:text-base">
-                  Build strategic partnerships, follow opportunity matches, and turn trusted African business relationships into growth.
-                </p>
+        <section className="animate-rise overflow-hidden rounded-[1.75rem] bg-[#1f1f1f] text-white shadow-xl shadow-slate-900/10 ring-1 ring-black/5">
+          <div className="bg-[#003b1f] px-5 py-8 text-center">
+            <p className="text-xs font-medium uppercase tracking-[0.35em] text-white/35">Business Directory</p>
+            <div className="mt-3 flex items-center justify-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#d9dedb] font-serif text-sm font-bold italic text-[#003b1f] shadow-lg">
+                K
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="secondary" onClick={() => navigate("/opportunities")}><Icon name="plus" /> Post opportunity</Button>
-                <Button className="bg-white/10 text-white hover:bg-white/20" variant="ghost" onClick={() => navigate("/network")}>Find people</Button>
-              </div>
+              <h1 className="font-serif text-5xl font-black uppercase leading-none tracking-[-0.03em] text-white">KONNEKT</h1>
             </div>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/82">
+              Find, connect & do business with local entrepreneurs. Welcome back, {currentUser.fullName.split(" ")[0]}.
+            </p>
+            <div className="mt-5 flex justify-center gap-2">
+              <button className="rounded-full border border-white/12 bg-[#00361d] px-4 py-2 text-sm font-medium text-white/90" type="button" onClick={() => navigate("/network")}>Find</button>
+              <button className="rounded-full border border-white/12 bg-[#00361d] px-4 py-2 text-sm font-medium text-white/90" type="button" onClick={() => navigate("/messages")}>Connect</button>
+              <button className="rounded-full border border-white/12 bg-[#00361d] px-4 py-2 text-sm font-medium text-white/90" type="button" onClick={() => navigate("/opportunities")}>Grow</button>
+              <button className="rounded-full bg-[#D4AF37] px-4 py-2 text-sm font-extrabold text-[#241c06]" type="button" onClick={() => setShowListingForm((previous) => !previous)}>Post Listing</button>
+            </div>
+          </div>
 
-            <div className="relative mt-7 grid gap-3 sm:grid-cols-3">
-              <DashboardMetric label="Connections" value={acceptedConnectionCount} helper="Accepted network" />
-              <DashboardMetric label="Opportunities" value={approvedOpportunityCount} helper="Approved posts" />
-              <DashboardMetric label="Profile" value={`${profileCompletion}%`} helper="Completion score" />
+          <div className="border-b border-[#313131] px-4 py-4">
+            <div className="grid grid-cols-[1fr_auto] gap-3">
+              <label className="relative block">
+                <Icon name="search" className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/42" />
+                <input
+                  className="h-12 w-full rounded-xl border border-[#555663] bg-[#2a2a2a] pl-11 pr-4 text-sm text-white outline-none placeholder:text-white/42 focus:border-[#008a58]"
+                  placeholder="Search business categories..."
+                  value={dashboardSearch}
+                  onChange={(event) => setDashboardSearch(event.target.value)}
+                />
+              </label>
+              <button className="h-12 rounded-xl bg-[#003b1f] px-4 text-sm font-extrabold text-white" type="button" onClick={() => setSelectedDashboardCategory("")}>Search</button>
+            </div>
+          </div>
+
+          <div className="px-4 py-7">
+            <h2 className="font-serif text-3xl font-black uppercase leading-none tracking-[-0.02em] text-white">Featured Categories</h2>
+            <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-4">
+              {dashboardCategories.map((category) => (
+                <button
+                  key={category.title}
+                  className={cn(
+                    "overflow-hidden rounded-xl bg-[#202020] text-left ring-1 ring-white/[0.03]",
+                    selectedDashboardCategory === category.title && "ring-2 ring-[#008a58]"
+                  )}
+                  type="button"
+                  onClick={() => {
+                    setSelectedDashboardCategory(category.title);
+                    setDashboardSearch("");
+                  }}
+                >
+                  <div className="relative h-28 overflow-hidden">
+                    <img className="h-full w-full object-cover opacity-72" src={category.image} alt={category.title} />
+                    <div className="absolute inset-0 bg-black/18" />
+                  </div>
+                  <p className="px-2 py-3 text-center text-base font-normal leading-tight text-white">{category.title}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 px-4 pb-6">
+            <BusinessResults title={dashboardSearch ? `Search results for “${dashboardSearch}”` : selectedDashboardCategory} businesses={dashboardBusinesses} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-4 gap-y-7 bg-[#003b1f] px-4 py-7 text-center">
+            <div>
+              <Icon name="network" className="mx-auto h-7 w-7 text-white/70" />
+              <p className="mt-2 text-lg font-extrabold text-white">{acceptedConnectionCount} Connections</p>
+              <p className="text-sm text-white/68">Accepted network</p>
+            </div>
+            <div>
+              <Icon name="briefcase" className="mx-auto h-7 w-7 text-white/70" />
+              <p className="mt-2 text-lg font-extrabold text-white">{approvedOpportunityCount} Opportunities</p>
+              <p className="text-sm text-white/68">Approved posts</p>
+            </div>
+            <div>
+              <Icon name="user" className="mx-auto h-7 w-7 text-white/70" />
+              <p className="mt-2 text-lg font-extrabold text-white">{profileCompletion}% Profile</p>
+              <p className="text-sm text-white/68">Completion score</p>
+            </div>
+            <div>
+              <Icon name="shield" className="mx-auto h-7 w-7 text-white/70" />
+              <p className="mt-2 text-lg font-extrabold text-white">Verified</p>
+              <p className="text-sm text-white/68">Trusted listings</p>
             </div>
           </div>
         </section>
+
+        {listingSuccess ? <SuccessMessage message={listingSuccess} /> : null}
+        {showListingForm ? (
+          <CreateListingPanel
+            currentUser={currentUser}
+            onCreateListing={async (values) => {
+              await onCreateListing(values);
+              setListingSuccess(isAdminUser(currentUser) ? "Listing published under its category." : "Listing submitted. It will appear publicly after admin approval.");
+              setShowListingForm(false);
+            }}
+            onCancel={() => setShowListingForm(false)}
+          />
+        ) : null}
 
         <Panel>
           <SectionTitle title="Recent opportunities" action={<button className="text-sm font-bold text-[#0B6B3A]" type="button" onClick={() => navigate("/opportunities")}>View all</button>} />
@@ -3071,16 +3622,6 @@ function SectionTitle({ title, action }: { title: string; action?: ReactNode }) 
     <div className="flex items-center justify-between gap-4">
       <h2 className="font-heading text-xl font-bold text-[#142019]">{title}</h2>
       {action}
-    </div>
-  );
-}
-
-function DashboardMetric({ label, value, helper }: { label: string; value: ReactNode; helper: string }) {
-  return (
-    <div className="rounded-3xl bg-white/12 p-4 ring-1 ring-white/15 backdrop-blur-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">{label}</p>
-      <p className="mt-2 font-heading text-3xl font-bold text-white">{value}</p>
-      <p className="mt-1 text-xs text-white/65">{helper}</p>
     </div>
   );
 }
@@ -4158,31 +4699,38 @@ function AdminPage({
   users,
   connections,
   opportunities,
+  listings,
   messages,
   notifications,
   onSaveUser,
   onApproveOpportunity,
   onDeleteOpportunity,
+  onApproveListing,
+  onDeleteListing,
   onSeedDemoData,
 }: {
   currentUser: UserProfile;
   users: UserProfile[];
   connections: Connection[];
   opportunities: Opportunity[];
+  listings: BusinessListing[];
   messages: Message[];
   notifications: NotificationItem[];
   onSaveUser: (userId: string, patch: Partial<UserProfile>) => Promise<void>;
   onApproveOpportunity: (opportunityId: string) => Promise<void>;
   onDeleteOpportunity: (opportunityId: string) => Promise<void>;
+  onApproveListing: (listingId: string) => Promise<void>;
+  onDeleteListing: (listingId: string) => Promise<void>;
   onSeedDemoData: () => Promise<void>;
 }) {
-  const [tab, setTab] = useState<"users" | "opportunities" | "analytics">("users");
+  const [tab, setTab] = useState<"users" | "opportunities" | "listings" | "analytics">("users");
   const [working, setWorking] = useState("");
   const [adminError, setAdminError] = useState("");
   const [adminSuccess, setAdminSuccess] = useState("");
   const pendingOpportunities = opportunities.filter((opportunity) => opportunity.status === "pending");
+  const pendingListings = listings.filter((listing) => listing.status === "pending");
   const acceptedConnections = connections.filter((connection) => connection.status === "accepted");
-  const engagementScore = acceptedConnections.length + messages.length + notifications.length;
+  const engagementScore = acceptedConnections.length + messages.length + notifications.length + listings.length;
 
   const withWorking = async (id: string, action: () => Promise<void>) => {
     setWorking(id);
@@ -4222,12 +4770,12 @@ function AdminPage({
         <AdminStat label="Users" value={users.length} />
         <AdminStat label="Suspended" value={users.filter((user) => user.suspended).length} />
         <AdminStat label="Pending posts" value={pendingOpportunities.length} />
-        <AdminStat label="Engagement" value={engagementScore} />
+        <AdminStat label="Pending listings" value={pendingListings.length} />
       </div>
 
       <Panel>
         <div className="flex flex-wrap gap-2">
-          {(["users", "opportunities", "analytics"] as const).map((item) => (
+          {(["users", "opportunities", "listings", "analytics"] as const).map((item) => (
             <button key={item} className={cn("rounded-2xl px-4 py-2 text-sm font-bold capitalize transition", tab === item ? "bg-[#0B6B3A] text-white" : "bg-[#F8FAF9] text-slate-600 hover:text-[#0B6B3A]")} type="button" onClick={() => setTab(item)}>
               {item}
             </button>
@@ -4286,11 +4834,42 @@ function AdminPage({
           </div>
         ) : null}
 
+        {tab === "listings" ? (
+          <div className="mt-5 space-y-3">
+            {listings.length ? listings.map((listing) => (
+              <div key={listing.id} className="flex flex-col gap-4 rounded-3xl border border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex gap-4">
+                  <div className="h-20 w-24 shrink-0 overflow-hidden rounded-2xl bg-[#0B6B3A]/10">
+                    {listing.imageUrl ? <img className="h-full w-full object-cover" src={listing.imageUrl} alt={listing.name} /> : null}
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge tone={listing.status === "approved" ? "green" : "red"}>{listing.status || "approved"}</Badge>
+                      <Badge tone="primary">{listing.category}</Badge>
+                      {listing.price ? <Badge tone="gold">{listing.price}</Badge> : null}
+                    </div>
+                    <h3 className="mt-3 font-heading text-lg font-bold text-[#142019]">{listing.name}</h3>
+                    <p className="mt-1 text-sm text-slate-500">Seller: {listing.sellerName || "Unknown"} - {listing.location}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {listing.status !== "approved" ? (
+                    <Button size="sm" loading={working === `approve-listing-${listing.id}`} onClick={() => void withWorking(`approve-listing-${listing.id}`, () => onApproveListing(listing.id))}>Approve listing</Button>
+                  ) : null}
+                  <Button variant="danger" size="sm" loading={working === `delete-listing-${listing.id}`} onClick={() => void withWorking(`delete-listing-${listing.id}`, () => onDeleteListing(listing.id))}>Remove listing</Button>
+                </div>
+              </div>
+            )) : (
+              <EmptyState title="No listings yet" description="Posted product and business listings will appear here for moderation." />
+            )}
+          </div>
+        ) : null}
+
         {tab === "analytics" ? (
           <div className="mt-5 grid gap-4 lg:grid-cols-3">
             <AnalyticsPanel title="User growth" value={`${users.length} profiles`} detail={`${users.filter((user) => user.verified).length} verified profiles`} />
             <AnalyticsPanel title="Revenue" value="$0 MVP" detail="Premium accounts are excluded from this launch build." />
-            <AnalyticsPanel title="Engagement" value={`${engagementScore} actions`} detail="Connections, messages, and notifications combined." />
+            <AnalyticsPanel title="Engagement" value={`${engagementScore} actions`} detail="Connections, messages, notifications, and listings combined." />
             <div className="rounded-3xl bg-[#F8FAF9] p-5 lg:col-span-3">
               <h3 className="font-heading text-lg font-bold text-[#142019]">MVP scope</h3>
               <p className="mt-2 text-sm leading-6 text-slate-500">
