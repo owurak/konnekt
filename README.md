@@ -28,6 +28,20 @@ The `messages` collection is included because the MVP requires one-to-one messag
 
 ## Profile Photo Uploads
 
+Profile photo uploads are optional. If you are skipping Firebase Storage or billing for now, keep this in `.env.local`:
+
+```env
+VITE_ENABLE_FIREBASE_STORAGE=false
+```
+
+The app will keep using generated initials avatars and all other features will continue working.
+
+When you enable Storage later, set it to:
+
+```env
+VITE_ENABLE_FIREBASE_STORAGE=true
+```
+
 Profile photos upload to Firebase Storage at `profile-photos/{userId}/...`. If uploads fail on a hosted app, check these first:
 
 - Firebase Storage is enabled for the project.
@@ -36,6 +50,19 @@ Profile photos upload to Firebase Storage at `profile-photos/{userId}/...`. If u
 - The selected image is JPG, PNG, WebP, or GIF.
 
 The app optimizes large profile photos before upload and Storage rules block non-image files.
+
+## PWA Install
+
+Konnekt includes Progressive Web App support:
+
+- Web app manifest: `public/manifest.webmanifest`
+- App icon: `public/icons/konnekt-icon.svg`
+- Service worker: `public/sw.js`
+- Registration: `src/main.tsx`
+
+The service worker is intentionally network-only. This keeps the app installable while preserving the live-data behavior: if the user is offline, Konnekt blocks usage instead of pretending messages, profiles, and opportunities can sync.
+
+After deployment, users can install Konnekt from Chrome/Edge or use **Add to Home Screen** on mobile browsers.
 
 ## Admin Bootstrap
 

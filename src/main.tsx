@@ -33,6 +33,8 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
               className="mt-5 rounded-2xl bg-[#0B6B3A] px-5 py-3 text-sm font-semibold text-white"
               type="button"
               onClick={() => window.location.reload()}
+
+             
             >
               Reload app
             </button>
@@ -52,3 +54,19 @@ createRoot(document.getElementById("root")!).render(
     </ErrorBoundary>
   </StrictMode>
 );
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch((error: unknown) => {
+      console.error("Konnekt service worker registration failed", error);
+    });
+  });
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch((error: unknown) => {
+      console.error("Konnekt service worker registration failed", error);
+    });
+  });
+}

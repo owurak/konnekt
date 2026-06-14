@@ -154,6 +154,10 @@ type CreateOpportunityValues = {
 
 type AuthMode = "login" | "register" | "reset";
 type SocialProviderName = "google" | "apple";
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
 
 type IconName =
   | "admin"
@@ -779,6 +783,51 @@ function useOnlineStatus() {
   return isOnline;
 }
 
+function usePwaInstallPrompt() {
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+    );
+  });
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+    const handleAppInstalled = () => {
+      setInstallPrompt(null);
+      setIsInstalled(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, []);
+
+  const installApp = async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === "accepted") {
+      setIsInstalled(true);
+    }
+    setInstallPrompt(null);
+  };
+
+  return {
+    canInstall: Boolean(installPrompt) && !isInstalled,
+    isInstalled,
+    installApp,
+  };
+}
+
 export default function App() {
   const initialDemoStore = useMemo(() => loadDemoStore(), []);
   const [path, setPath] = useState(getInitialPath);
@@ -1014,13 +1063,16 @@ export default function App() {
     const provider =
       providerName === "google" ? new GoogleAuthProvider() : new OAuthProvider("apple.com");
 
-    if (providerName === "google") {
-      provider.addScope("email");
-      provider.addScope("profile");
-    } else {
-      provider.addScope("email");
-      provider.addScope("name");
-    }
+   if (providerName === "google") {
+  provider.addScope("email");
+  provider.addScope("profile");
+  provider.setCustomParameters({
+    prompt: "select_account consent"
+  });
+} else {
+  provider.addScope("email");
+  provider.addScope("name");
+}
 
     try {
       if (shouldUseRedirectSignIn()) {
@@ -2122,7 +2174,7 @@ function AuthPage({
 
               {mode !== "reset" ? (
                 <div className="mb-5 space-y-3">
-                 <div className="grid gap-3">
+                  <div className="grid gap-3">
                     <Button
                       className="w-full"
                       type="button"
@@ -2134,7 +2186,7 @@ function AuthPage({
                       <span className="font-heading text-base">G</span>
                       Continue with Google
                     </Button>
-  
+                   
                   </div>
                   {!firebaseEnabled ? (
                     <p className="text-center text-xs text-slate-500">Social sign-in appears after Firebase is connected.</p>
@@ -2360,6 +2412,7 @@ function AppShell({
   const adminItem = isAdminUser(currentUser) ? [{ label: "Admin", path: "/admin", icon: "admin" as IconName }] : [];
   const allItems = [...navigationItems, settingsItem, ...adminItem];
   const mobileItems = navigationItems;
+  const pwaInstall = usePwaInstallPrompt();
 
   return (
     <div className="min-h-screen bg-[#F8FAF9] text-[#142019]">
@@ -2401,6 +2454,16 @@ function AppShell({
               <h1 className="font-heading text-2xl font-bold text-[#142019]">{pageTitle(path)}</h1>
             </div>
             <div className="flex items-center gap-2">
+              {pwaInstall.canInstall ? (
+                <button
+                  className="hidden h-11 items-center justify-center gap-2 rounded-2xl border border-[#0B6B3A]/20 bg-white px-3 text-sm font-bold text-[#0B6B3A] shadow-sm transition hover:bg-[#0B6B3A]/10 sm:flex"
+                  type="button"
+                  onClick={() => void pwaInstall.installApp()}
+                >
+                  <Icon name="plus" className="h-4 w-4" />
+                  Install
+                </button>
+              ) : null}
               <button
                 className={cn(
                   "flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:text-[#0B6B3A]",
@@ -2476,6 +2539,18 @@ function AppShell({
         >
           <Icon name="admin" className="h-5 w-5" />
           Admin
+        </button>
+      ) : null}
+
+      {pwaInstall.canInstall ? (
+        <button
+          className="fixed bottom-40 right-4 z-50 inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#0B6B3A] shadow-xl shadow-slate-900/20 ring-1 ring-[#0B6B3A]/15 transition hover:bg-[#0B6B3A]/10 sm:hidden"
+          type="button"
+          onClick={() => void pwaInstall.installApp()}
+          aria-label="Install Konnekt app"
+        >
+          <Icon name="plus" className="h-5 w-5" />
+          Install
         </button>
       ) : null}
 
