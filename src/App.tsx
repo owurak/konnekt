@@ -25,7 +25,6 @@ import {
 } from "firebase/auth";
 import {
   collection,
-  deleteDoc,
   doc,
   onSnapshot,
   query,
@@ -36,6 +35,12 @@ import {
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { auth, db, isFirebaseConfigured, storage } from "./lib/firebase";
 import { cn } from "./utils/cn";
+import { getErrorMessage } from "./utils/getErrorMessage";
+import { sortByDateDesc, sortByDateAsc } from "./utils/sortByDate";
+import { firestoreCreate, firestoreUpdate, firestoreDelete } from "./utils/firestoreHelpers";
+import { useAsyncAction } from "./hooks/useAsyncAction";
+import { usePwaInstallAction } from "./hooks/usePwaInstallAction";
+import { FEATURED_CATEGORIES, MORE_CATEGORIES, ALL_CATEGORY_TITLES } from "./data/categories";
 
 type Role = "member" | "admin";
 type ConnectionStatus = "pending" | "accepted" | "rejected";
@@ -195,10 +200,6 @@ type CreateListingValues = {
 
 type AuthMode = "login" | "register" | "reset";
 type SocialProviderName = "google";
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
-};
 
 type IconName =
   | "admin"
@@ -983,50 +984,7 @@ function useOnlineStatus() {
   return isOnline;
 }
 
-function usePwaInstallPrompt() {
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return (
-      window.matchMedia("(display-mode: standalone)").matches ||
-      Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
-    );
-  });
 
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-    };
-    const handleAppInstalled = () => {
-      setInstallPrompt(null);
-      setIsInstalled(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("appinstalled", handleAppInstalled);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", handleAppInstalled);
-    };
-  }, []);
-
-  const installApp = async () => {
-    if (!installPrompt) return;
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
-    if (choice.outcome === "accepted") {
-      setIsInstalled(true);
-    }
-    setInstallPrompt(null);
-  };
-
-  return {
-    canInstall: Boolean(installPrompt) && !isInstalled,
-    isInstalled,
-    installApp,
-  };
-}
 
 export default function App() {
   const initialDemoStore = useMemo(() => loadDemoStore(), []);
@@ -1315,7 +1273,7 @@ export default function App() {
     setCurrentUserId(credential.user.uid);
     navigate("/");
   } catch (socialError) {
-    const message = socialError instanceof Error ? socialError.message : String(socialError);
+    const message = getErrorMessage(socialError, "");
     if (shouldUseRedirectSignIn() && message.includes("auth/popup-blocked")) {
       await signInWithRedirect(auth, provider);
       return;
@@ -1405,13 +1363,7 @@ export default function App() {
   };
 
   const saveUserProfile = async (userId: string, patch: Partial<UserProfile>) => {
-    if (db) {
-      await setDoc(doc(db, "users", userId), patch, { merge: true });
-      return;
-    }
-    setUsers((previous) =>
-      previous.map((user) => (user.id === userId ? { ...user, ...patch } : user))
-    );
+    await firestoreUpdate(db, "users", userId, patch, setUsers);
   };
 
   const createNotification = async (
@@ -1427,24 +1379,11 @@ export default function App() {
       read: false,
       createdAt: nowIso(),
     };
-
-    if (db) {
-      await setDoc(doc(db, "notifications", notification.id), notification);
-      return;
-    }
-    setNotifications((previous) => [notification, ...previous]);
+    await firestoreCreate(db, "notifications", notification, setNotifications);
   };
 
   const markNotificationRead = async (notificationId: string) => {
-    if (db) {
-      await setDoc(doc(db, "notifications", notificationId), { read: true }, { merge: true });
-      return;
-    }
-    setNotifications((previous) =>
-      previous.map((notification) =>
-        notification.id === notificationId ? { ...notification, read: true } : notification
-      )
-    );
+    await firestoreUpdate(db, "notifications", notificationId, { read: true }, setNotifications);
   };
 
   const markAllNotificationsRead = async () => {
@@ -1462,21 +1401,14 @@ export default function App() {
     }
     setConnections((previous) => {
       const exists = previous.some((item) => item.id === connection.id);
-      if (exists) return previous.map((item) => (item.id === connection.id ? connection : item));
-      return [connection, ...previous];
+      return exists
+        ? previous.map((item) => (item.id === connection.id ? connection : item))
+        : [connection, ...previous];
     });
   };
 
   const updateConnection = async (connectionId: string, patch: Partial<Connection>) => {
-    if (db) {
-      await setDoc(doc(db, "connections", connectionId), patch, { merge: true });
-      return;
-    }
-    setConnections((previous) =>
-      previous.map((connection) =>
-        connection.id === connectionId ? { ...connection, ...patch } : connection
-      )
-    );
+    await firestoreUpdate(db, "connections", connectionId, patch, setConnections);
   };
 
   const handleSendConnection = async (receiverId: string) => {
@@ -1564,25 +1496,13 @@ export default function App() {
       throw new Error("Add a title and description before posting.");
     }
 
-    if (db) {
-      await setDoc(doc(db, "opportunities", opportunity.id), opportunity);
-    } else {
-      setOpportunities((previous) => [opportunity, ...previous]);
-    }
+    await firestoreCreate(db, "opportunities", opportunity, setOpportunities);
 
     // Keep every new post pending first. Admins approve from the Admin panel.
   };
 
   const updateOpportunity = async (opportunityId: string, patch: Partial<Opportunity>) => {
-    if (db) {
-      await setDoc(doc(db, "opportunities", opportunityId), patch, { merge: true });
-      return;
-    }
-    setOpportunities((previous) =>
-      previous.map((opportunity) =>
-        opportunity.id === opportunityId ? { ...opportunity, ...patch } : opportunity
-      )
-    );
+    await firestoreUpdate(db, "opportunities", opportunityId, patch, setOpportunities);
   };
 
   const approveOpportunity = async (opportunityId: string) => {
@@ -1592,20 +1512,17 @@ export default function App() {
     try {
       await notifyOpportunityMatches({ ...opportunity, status: "approved" });
     } catch (notificationError) {
+      const msg = getErrorMessage(notificationError, "");
       setRuntimeError(
-        notificationError instanceof Error
-          ? `Opportunity approved, but match notifications failed: ${notificationError.message}`
+        msg
+          ? `Opportunity approved, but match notifications failed: ${msg}`
           : "Opportunity approved, but match notifications failed."
       );
     }
   };
 
   const deleteOpportunity = async (opportunityId: string) => {
-    if (db) {
-      await deleteDoc(doc(db, "opportunities", opportunityId));
-      return;
-    }
-    setOpportunities((previous) => previous.filter((opportunity) => opportunity.id !== opportunityId));
+    await firestoreDelete(db, "opportunities", opportunityId, setOpportunities);
   };
 
   const createListing = async (values: CreateListingValues) => {
@@ -1633,21 +1550,11 @@ export default function App() {
       throw new Error("Add a title, category, and description before posting.");
     }
 
-    if (db) {
-      await setDoc(doc(db, "listings", listing.id), listing);
-    } else {
-      setListings((previous) => [listing, ...previous]);
-    }
+    await firestoreCreate(db, "listings", listing, setListings);
   };
 
   const updateListing = async (listingId: string, patch: Partial<BusinessListing>) => {
-    if (db) {
-      await setDoc(doc(db, "listings", listingId), patch, { merge: true });
-      return;
-    }
-    setListings((previous) =>
-      previous.map((listing) => (listing.id === listingId ? { ...listing, ...patch } : listing))
-    );
+    await firestoreUpdate(db, "listings", listingId, patch, setListings);
   };
 
   const approveListing = async (listingId: string) => {
@@ -1655,11 +1562,7 @@ export default function App() {
   };
 
   const deleteListing = async (listingId: string) => {
-    if (db) {
-      await deleteDoc(doc(db, "listings", listingId));
-      return;
-    }
-    setListings((previous) => previous.filter((listing) => listing.id !== listingId));
+    await firestoreDelete(db, "listings", listingId, setListings);
   };
 
   const uploadProfilePhoto = async (file: File) => {
@@ -1699,12 +1602,7 @@ export default function App() {
     };
     if (!message.body) throw new Error("Write a message first.");
 
-    if (db) {
-      await setDoc(doc(db, "messages", message.id), message);
-    } else {
-      setMessages((previous) => [...previous, message]);
-    }
-
+    await firestoreCreate(db, "messages", message, setMessages);
     await createNotification(receiverId, "message", `${currentUser.fullName} sent you a message.`);
   };
 
@@ -2335,46 +2233,9 @@ function DashboardSkeleton() {
 }
 
 function LandingPage({ navigate, listings }: { navigate: (to: string) => void; listings: BusinessListing[] }) {
-  const pwaInstall = usePwaInstallPrompt();
+  const pwaInstall = usePwaInstallAction();
   const [selectedCategory, setSelectedCategory] = useState("Beauty & Makeup");
   const [directorySearch, setDirectorySearch] = useState("");
-  const featuredCategories = [
-    {
-      title: "Beauty & Makeup",
-      image: "https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-    {
-      title: "Groceries & Food",
-      image: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-    {
-      title: "Electronics",
-      image: "https://images.pexels.com/photos/1841841/pexels-photo-1841841.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-    {
-      title: "Shoes & Footwear",
-      image: "https://images.pexels.com/photos/19090/pexels-photo.jpg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-  ];
-
-  const moreCategories = [
-    {
-      title: "Printing Services",
-      image: "https://images.pexels.com/photos/5691622/pexels-photo-5691622.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-    {
-      title: "Fashion & Clothing",
-      image: "https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-    {
-      title: "Books & Education",
-      image: "https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-    {
-      title: "Phones & Accessories",
-      image: "https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-  ];
 
   const stats = [
     { label: "100+ Businesses", helper: "Listed & growing", icon: "briefcase" as IconName },
@@ -2401,13 +2262,7 @@ function LandingPage({ navigate, listings }: { navigate: (to: string) => void; l
     scrollToSection("business-results");
   };
 
-  const handleInstall = async () => {
-    if (pwaInstall.canInstall) {
-      await pwaInstall.installApp();
-      return;
-    }
-    window.alert("To install Konnekt, open your browser menu and choose Install app or Add to Home screen.");
-  };
+  const handleInstall = () => void pwaInstall.triggerInstall();
 
   return (
     <main className="min-h-screen bg-[#1f1f1f] text-white">
@@ -2435,7 +2290,7 @@ function LandingPage({ navigate, listings }: { navigate: (to: string) => void; l
           <button className="shrink-0 pb-2 hover:text-white" type="button" onClick={() => scrollToSection("about")}>About Us</button>
           <button className="shrink-0 pb-2 hover:text-white" type="button" onClick={() => navigate("/register")}>Register</button>
           <button className="shrink-0 pb-2 hover:text-white" type="button" onClick={() => scrollToSection("contact")}>Contact Us</button>
-          <button className="shrink-0 rounded-full bg-[#003b1f] px-4 py-2 text-sm font-bold text-white" type="button" onClick={() => void handleInstall()}>Install</button>
+          <button className="shrink-0 rounded-full bg-[#003b1f] px-4 py-2 text-sm font-bold text-white" type="button" onClick={handleInstall}>Install</button>
         </div>
       </header>
 
@@ -2458,9 +2313,9 @@ function LandingPage({ navigate, listings }: { navigate: (to: string) => void; l
       </section>
 
       <section id="categories" className="mx-auto max-w-6xl px-5 py-10">
-        <DirectorySection title="Featured Categories" categories={featuredCategories} selectedCategory={selectedCategory} onSelect={selectCategory} />
+        <DirectorySection title="Featured Categories" categories={FEATURED_CATEGORIES} selectedCategory={selectedCategory} onSelect={selectCategory} />
         <div className="mt-14">
-          <DirectorySection title="More Categories" categories={moreCategories} selectedCategory={selectedCategory} onSelect={selectCategory} />
+          <DirectorySection title="More Categories" categories={MORE_CATEGORIES} selectedCategory={selectedCategory} onSelect={selectCategory} />
         </div>
         <div id="business-results" className="mt-12 scroll-mt-24">
           <BusinessResults title={directorySearch ? `Search results for “${directorySearch}”` : selectedCategory} businesses={visibleBusinesses} />
@@ -2496,7 +2351,7 @@ function LandingPage({ navigate, listings }: { navigate: (to: string) => void; l
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Button className="bg-[#003b1f] hover:bg-[#00502b]" size="lg" onClick={() => navigate("/register")}>Register</Button>
           <Button className="border-white/15 bg-white/5 text-white hover:bg-white/10" variant="outline" size="lg" onClick={() => navigate("/login")}>Login</Button>
-          <Button className="border-white/15 bg-white/5 text-white hover:bg-white/10" variant="outline" size="lg" onClick={() => void handleInstall()}>Install App</Button>
+          <Button className="border-white/15 bg-white/5 text-white hover:bg-white/10" variant="outline" size="lg" onClick={handleInstall}>Install App</Button>
         </div>
       </section>
     </main>
@@ -2504,20 +2359,20 @@ function LandingPage({ navigate, listings }: { navigate: (to: string) => void; l
 }
 
 function getDirectoryMatches(category: string, search: string, source: BusinessListing[] = BUSINESS_LISTINGS) {
-  const query = normalize(search);
-  return source
+  const q = normalize(search);
+  const filtered = source
     .filter((business) => (business.status || "approved") === "approved" || business.status === "pending")
     .filter((business) => {
       const matchesCategory = !category || business.category === category;
       const matchesSearch =
-        !query ||
+        !q ||
         [business.name, business.category, business.description, business.location, business.sellerName, business.price]
           .join(" ")
           .toLowerCase()
-          .includes(query);
-      return matchesSearch && (query ? true : matchesCategory);
-    })
-    .sort((a, b) => new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime());
+          .includes(q);
+      return matchesSearch && (q ? true : matchesCategory);
+    });
+  return filtered.sort((a, b) => new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime());
 }
 
 function DirectorySection({
@@ -2632,21 +2487,7 @@ function CreateListingPanel({
     website: "",
     imageUrl: "",
   });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    setError("");
-    try {
-      await onCreateListing(values);
-    } catch (listingError) {
-      setError(listingError instanceof Error ? listingError.message : "Unable to post listing.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const { submitting, error, handleSubmit } = useAsyncAction();
 
   return (
     <Panel>
@@ -2659,11 +2500,11 @@ function CreateListingPanel({
         <Button variant="ghost" type="button" onClick={onCancel}>Close</Button>
       </div>
       {error ? <div className="mt-4"><ErrorMessage message={error} /></div> : null}
-      <form className="mt-5 space-y-4" onSubmit={submit}>
+      <form className="mt-5 space-y-4" onSubmit={handleSubmit(() => onCreateListing(values), "Unable to post listing.")}>
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Listing title" value={values.name} onChange={(event) => setValues((previous) => ({ ...previous, name: event.target.value }))} placeholder="iPhone 13 Pro / Makeup service / Printing package" required />
           <SelectField label="Category" value={values.category} onChange={(event) => setValues((previous) => ({ ...previous, category: event.target.value }))}>
-            {["Beauty & Makeup", "Groceries & Food", "Electronics", "Shoes & Footwear", "Printing Services", "Fashion & Clothing", "Books & Education", "Phones & Accessories"].map((category) => <option key={category}>{category}</option>)}
+            {ALL_CATEGORY_TITLES.map((category) => <option key={category}>{category}</option>)}
           </SelectField>
         </div>
         <TextareaField label="Description" value={values.description} onChange={(event) => setValues((previous) => ({ ...previous, description: event.target.value }))} placeholder="Describe the product/service, quality, delivery, and what buyers should know." required />
@@ -2723,9 +2564,8 @@ function AuthPage({
     portfolioWebsite: "",
   });
   const [resetEmail, setResetEmail] = useState("");
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const { submitting, error, setError, run, handleSubmit } = useAsyncAction();
   const [socialSubmitting, setSocialSubmitting] = useState<SocialProviderName | "">("");
 
   useEffect(() => {
@@ -2733,58 +2573,17 @@ function AuthPage({
     setSuccess("");
   }, [mode]);
 
-  const submitLogin = async (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    setError("");
-    try {
-      await onLogin(loginValues);
-    } catch (loginError) {
-      setError(loginError instanceof Error ? loginError.message : "Unable to login.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const submitLogin = handleSubmit(() => onLogin(loginValues), "Unable to login.");
 
-  const submitRegister = async (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    setError("");
-    try {
-      await onRegister(registerValues);
-    } catch (registerError) {
-      setError(registerError instanceof Error ? registerError.message : "Unable to create account.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const submitRegister = handleSubmit(() => onRegister(registerValues), "Unable to create account.");
 
-  const submitReset = async (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    setError("");
+  const submitReset = handleSubmit(async () => {
     setSuccess("");
-    try {
-      await onReset(resetEmail);
-      setSuccess("If the email is registered, password reset instructions have been sent.");
-    } catch (resetError) {
-      setError(resetError instanceof Error ? resetError.message : "Unable to send reset email.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    await onReset(resetEmail);
+    setSuccess("If the email is registered, password reset instructions have been sent.");
+  }, "Unable to send reset email.");
 
-  const runDemoLogin = async (kind: "member" | "admin") => {
-    setSubmitting(true);
-    setError("");
-    try {
-      await onDemoLogin(kind);
-    } catch (demoError) {
-      setError(demoError instanceof Error ? demoError.message : "Demo login failed.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const runDemoLogin = (kind: "member" | "admin") => void run(() => onDemoLogin(kind), "Demo login failed.");
 
   const runSocialLogin = async (providerName: SocialProviderName) => {
     setSocialSubmitting(providerName);
@@ -2793,7 +2592,7 @@ function AuthPage({
     try {
       await onSocialLogin(providerName);
     } catch (socialError) {
-      setError(socialError instanceof Error ? socialError.message : "Social sign-in failed.");
+      setError(getErrorMessage(socialError, "Social sign-in failed."));
     } finally {
       setSocialSubmitting("");
     }
@@ -3112,14 +2911,8 @@ function AppShell({
   const adminItem = isAdminUser(currentUser) ? [{ label: "Admin", path: "/admin", icon: "admin" as IconName }] : [];
   const allItems = [...navigationItems, settingsItem, ...adminItem];
   const mobileItems = navigationItems;
-  const pwaInstall = usePwaInstallPrompt();
-  const handleInstallClick = async () => {
-    if (pwaInstall.canInstall) {
-      await pwaInstall.installApp();
-      return;
-    }
-    window.alert("To install Konnekt, open your browser menu and choose Install app or Add to Home screen.");
-  };
+  const pwaInstall = usePwaInstallAction();
+  const handleInstallClick = () => void pwaInstall.triggerInstall();
 
   return (
     <div className="min-h-screen bg-[#F8FAF9] text-[#142019]">
@@ -3164,7 +2957,7 @@ function AppShell({
               <button
                 className="hidden h-11 items-center justify-center gap-2 rounded-2xl border border-[#0B6B3A]/20 bg-white px-3 text-sm font-bold text-[#0B6B3A] shadow-sm transition hover:bg-[#0B6B3A]/10 sm:flex"
                 type="button"
-                onClick={() => void handleInstallClick()}
+                onClick={handleInstallClick}
               >
                 <Icon name="plus" className="h-4 w-4" />
                 Install
@@ -3250,7 +3043,7 @@ function AppShell({
       <button
         className="fixed bottom-40 right-4 z-50 inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-[#0B6B3A] shadow-xl shadow-slate-900/20 ring-1 ring-[#0B6B3A]/15 transition hover:bg-[#0B6B3A]/10 sm:hidden"
         type="button"
-        onClick={() => void handleInstallClick()}
+        onClick={handleInstallClick}
         aria-label="Install Konnekt app"
       >
         <Icon name="plus" className="h-5 w-5" />
@@ -3355,16 +3148,14 @@ function DashboardPage({
   const [dashboardSearch, setDashboardSearch] = useState("");
   const [showListingForm, setShowListingForm] = useState(false);
   const [listingSuccess, setListingSuccess] = useState("");
-  const visibleOpportunities = opportunities
-    .filter((opportunity) => canViewOpportunity(opportunity, currentUser))
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 3);
+  const visibleOpportunities = sortByDateDesc(
+    opportunities.filter((opportunity) => canViewOpportunity(opportunity, currentUser))
+  ).slice(0, 3);
 
   const suggestedUsers = getSuggestedUsers(currentUser, users, connections).slice(0, 4);
-  const userNotifications = notifications
-    .filter((notification) => notification.userId === currentUser.id)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 4);
+  const userNotifications = sortByDateDesc(
+    notifications.filter((notification) => notification.userId === currentUser.id)
+  ).slice(0, 4);
   const pendingRequests = connections
     .filter((connection) => connection.receiverId === currentUser.id && connection.status === "pending")
     .slice(0, 3);
@@ -3382,24 +3173,7 @@ function DashboardPage({
   const profileCompletion = Math.round(
     (profileCompletionItems.filter(Boolean).length / profileCompletionItems.length) * 100
   );
-  const dashboardCategories = [
-    {
-      title: "Beauty & Makeup",
-      image: "https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-    {
-      title: "Groceries & Food",
-      image: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-    {
-      title: "Electronics",
-      image: "https://images.pexels.com/photos/1841841/pexels-photo-1841841.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-    {
-      title: "Shoes & Footwear",
-      image: "https://images.pexels.com/photos/19090/pexels-photo.jpg?auto=compress&cs=tinysrgb&fit=crop&h=260&w=520",
-    },
-  ];
+  const dashboardCategories = FEATURED_CATEGORIES;
   const visibleListings = listings.filter(
     (listing) => listing.status === "approved" || listing.sellerId === currentUser.id || isAdminUser(currentUser)
   );
@@ -3881,9 +3655,9 @@ function ProfilePage({
 
   const displayProfile = { ...profile, photoUrl: photoPreviewUrl || profile.photoUrl };
   const isOwnProfile = profile.id === currentUser.id;
-  const profileOpportunities = opportunities
-    .filter((opportunity) => opportunity.posterId === profile.id && canViewOpportunity(opportunity, currentUser))
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const profileOpportunities = sortByDateDesc(
+    opportunities.filter((opportunity) => opportunity.posterId === profile.id && canViewOpportunity(opportunity, currentUser))
+  );
   const connectedProfilesCount = getAcceptedConnectionCount(profile.id, connections);
 
   const updateFormValue = (field: keyof ProfileFormValues, value: string) => {
@@ -3911,7 +3685,7 @@ function ProfilePage({
       setPhotoFile(null);
       setPhotoPreviewUrl(profile.photoUrl);
       setSuccess("");
-      setError(photoError instanceof Error ? photoError.message : "Unable to use that image.");
+      setError(getErrorMessage(photoError, "Unable to use that image."));
     }
   };
 
@@ -3937,7 +3711,7 @@ function ProfilePage({
       setSuccess(photoFile ? "Profile photo and details updated successfully." : "Profile updated successfully.");
       setEditing(false);
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Unable to save profile.");
+      setError(getErrorMessage(saveError, "Unable to save profile."));
     } finally {
       setSaving(false);
     }
@@ -4110,9 +3884,7 @@ function OpportunitiesPage({
   onDeleteOpportunity: (opportunityId: string) => Promise<void>;
 }) {
   const [showForm, setShowForm] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [values, setValues] = useState<CreateOpportunityValues>({
+  const emptyOpportunityValues: CreateOpportunityValues = {
     title: "",
     description: "",
     type: "Job",
@@ -4121,35 +3893,19 @@ function OpportunitiesPage({
     budget: "",
     deadline: "",
     applyLink: "",
-  });
-
-  const visibleOpportunities = opportunities
-    .filter((opportunity) => canViewOpportunity(opportunity, currentUser))
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-  const submitOpportunity = async (event: FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    setError("");
-    try {
-      await onCreateOpportunity(values);
-      setValues({
-        title: "",
-        description: "",
-        type: "Job",
-        industry: "Technology",
-        location: "Remote across Africa",
-        budget: "",
-        deadline: "",
-        applyLink: "",
-      });
-      setShowForm(false);
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Unable to create opportunity.");
-    } finally {
-      setSubmitting(false);
-    }
   };
+  const [values, setValues] = useState<CreateOpportunityValues>(emptyOpportunityValues);
+  const { submitting, error, handleSubmit } = useAsyncAction();
+
+  const visibleOpportunities = sortByDateDesc(
+    opportunities.filter((opportunity) => canViewOpportunity(opportunity, currentUser))
+  );
+
+  const submitOpportunity = handleSubmit(async () => {
+    await onCreateOpportunity(values);
+    setValues(emptyOpportunityValues);
+    setShowForm(false);
+  }, "Unable to create opportunity.");
 
   return (
     <div className="space-y-5">
@@ -4386,9 +4142,9 @@ function NotificationsPage({
   onMarkRead: (notificationId: string) => Promise<void>;
   onMarkAllRead: () => Promise<void>;
 }) {
-  const userNotifications = notifications
-    .filter((notification) => notification.userId === currentUser.id)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const userNotifications = sortByDateDesc(
+    notifications.filter((notification) => notification.userId === currentUser.id)
+  );
   const unreadCount = userNotifications.filter((notification) => !notification.read).length;
 
   return (
@@ -4474,13 +4230,13 @@ function MessagesPage({
 
   const selectedContact = contacts.find((contact) => contact.id === selectedId) ?? null;
   const thread = selectedContact
-    ? messages
-        .filter(
+    ? sortByDateAsc(
+        messages.filter(
           (message) =>
             (message.senderId === currentUser.id && message.receiverId === selectedContact.id) ||
             (message.senderId === selectedContact.id && message.receiverId === currentUser.id)
         )
-        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      )
     : [];
 
   const submitMessage = async (event: FormEvent) => {
@@ -4491,7 +4247,7 @@ function MessagesPage({
       await onSendMessage(selectedContact.id, messageBody);
       setMessageBody("");
     } catch (sendError) {
-      setError(sendError instanceof Error ? sendError.message : "Unable to send message.");
+      setError(getErrorMessage(sendError, "Unable to send message."));
     }
   };
 
@@ -4739,8 +4495,8 @@ function AdminPage({
     try {
       await action();
       setAdminSuccess("Admin action completed successfully.");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Admin action failed.";
+    } catch (err) {
+      const message = getErrorMessage(err, "Admin action failed.");
       const permissionHint = message.toLowerCase().includes("permission")
         ? ` Firestore rejected this as non-admin. Confirm users/${currentUser.id} has role set to admin, then publish the latest firestore.rules.`
         : "";
