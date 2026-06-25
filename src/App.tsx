@@ -1161,8 +1161,12 @@ export default function App() {
         const nextUsers = mapSnapshot<UserProfile>(snapshot);
         setUsers(nextUsers);
         if (auth?.currentUser && !nextUsers.some((user) => user.id === currentUserId)) {
-          void setDoc(doc(firestore, "users", currentUserId), buildFirebaseProfile(auth.currentUser), {
+          setDoc(doc(firestore, "users", currentUserId), buildFirebaseProfile(auth.currentUser), {
             merge: true,
+          }).catch((error: unknown) => {
+            setRuntimeError(
+              error instanceof Error ? `Auto-profile sync failed: ${error.message}` : "Auto-profile sync failed."
+            );
           });
         }
         setLoadingData(false);
@@ -1399,7 +1403,11 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    if (auth) await signOut(auth);
+    try {
+      if (auth) await signOut(auth);
+    } catch (logoutError) {
+      setRuntimeError(logoutError instanceof Error ? logoutError.message : "Logout failed.");
+    }
     setCurrentUserId(null);
     navigate("/login");
   };
@@ -1452,7 +1460,11 @@ export default function App() {
     const unread = notifications.filter(
       (notification) => notification.userId === currentUser.id && !notification.read
     );
-    await Promise.all(unread.map((notification) => markNotificationRead(notification.id)));
+    const results = await Promise.allSettled(unread.map((notification) => markNotificationRead(notification.id)));
+    const failures = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+    if (failures.length) {
+      throw new Error(`Failed to mark ${failures.length} notification${failures.length === 1 ? "" : "s"} as read.`);
+    }
   };
 
   const upsertConnection = async (connection: Connection) => {
@@ -2402,11 +2414,15 @@ function LandingPage({ navigate, listings }: { navigate: (to: string) => void; l
   };
 
   const handleInstall = async () => {
-    if (pwaInstall.canInstall) {
-      await pwaInstall.installApp();
-      return;
+    try {
+      if (pwaInstall.canInstall) {
+        await pwaInstall.installApp();
+        return;
+      }
+      window.alert("To install Konnekt, open your browser menu and choose Install app or Add to Home screen.");
+    } catch (installError) {
+      window.alert(installError instanceof Error ? installError.message : "App installation failed.");
     }
-    window.alert("To install Konnekt, open your browser menu and choose Install app or Add to Home screen.");
   };
 
   return (
@@ -3114,11 +3130,15 @@ function AppShell({
   const mobileItems = navigationItems;
   const pwaInstall = usePwaInstallPrompt();
   const handleInstallClick = async () => {
-    if (pwaInstall.canInstall) {
-      await pwaInstall.installApp();
-      return;
+    try {
+      if (pwaInstall.canInstall) {
+        await pwaInstall.installApp();
+        return;
+      }
+      window.alert("To install Konnekt, open your browser menu and choose Install app or Add to Home screen.");
+    } catch (installError) {
+      window.alert(installError instanceof Error ? installError.message : "App installation failed.");
     }
-    window.alert("To install Konnekt, open your browser menu and choose Install app or Add to Home screen.");
   };
 
   return (
@@ -3355,6 +3375,16 @@ function DashboardPage({
   const [dashboardSearch, setDashboardSearch] = useState("");
   const [showListingForm, setShowListingForm] = useState(false);
   const [listingSuccess, setListingSuccess] = useState("");
+  const [connectionError, setConnectionError] = useState("");
+
+  const safeRespondConnection = async (connectionId: string, status: "accepted" | "rejected") => {
+    try {
+      setConnectionError("");
+      await onRespondConnection(connectionId, status);
+    } catch (respondError) {
+      setConnectionError(respondError instanceof Error ? respondError.message : "Connection response failed.");
+    }
+  };
   const visibleOpportunities = opportunities
     .filter((opportunity) => canViewOpportunity(opportunity, currentUser))
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -3570,6 +3600,7 @@ function DashboardPage({
 
         <Panel>
           <SectionTitle title="Connection requests" />
+          {connectionError ? <ErrorMessage message={connectionError} /> : null}
           <div className="mt-4 space-y-3">
             {pendingRequests.length ? (
               pendingRequests.map((request) => {
@@ -3583,8 +3614,8 @@ function DashboardPage({
                         <p className="font-semibold text-[#142019]">{sender.fullName}</p>
                         <p className="text-sm text-slate-500">{sender.professionalTitle}</p>
                         <div className="mt-3 flex gap-2">
-                          <Button size="sm" onClick={() => void onRespondConnection(request.id, "accepted")}>Accept</Button>
-                          <Button size="sm" variant="outline" onClick={() => void onRespondConnection(request.id, "rejected")}>Decline</Button>
+                          <Button size="sm" onClick={() => void safeRespondConnection(request.id, "accepted")}>Accept</Button>
+                          <Button size="sm" variant="outline" onClick={() => void safeRespondConnection(request.id, "rejected")}>Decline</Button>
                         </div>
                       </div>
                     </div>
@@ -3812,7 +3843,26 @@ function ConnectionControls({
   onConnect: (receiverId: string) => Promise<void>;
   onRespondConnection: (connectionId: string, status: "accepted" | "rejected") => Promise<void>;
 }) {
+  const [error, setError] = useState("");
   const state = getConnectionState(target.id, currentUser.id, connections);
+
+  const safeConnect = async () => {
+    try {
+      setError("");
+      await onConnect(target.id);
+    } catch (connectError) {
+      setError(connectError instanceof Error ? connectError.message : "Connection request failed.");
+    }
+  };
+
+  const safeRespond = async (connectionId: string, status: "accepted" | "rejected") => {
+    try {
+      setError("");
+      await onRespondConnection(connectionId, status);
+    } catch (respondError) {
+      setError(respondError instanceof Error ? respondError.message : "Connection response failed.");
+    }
+  };
 
   if (state.state === "connected") {
     return (
@@ -3828,13 +3878,19 @@ function ConnectionControls({
   if (state.state === "received" && state.connection) {
     return (
       <>
-        <Button size="sm" onClick={() => void onRespondConnection(state.connection.id, "accepted")}>Accept</Button>
-        <Button variant="outline" size="sm" onClick={() => void onRespondConnection(state.connection.id, "rejected")}>Decline</Button>
+        {error ? <span className="text-xs text-red-600">{error}</span> : null}
+        <Button size="sm" onClick={() => void safeRespond(state.connection.id, "accepted")}>Accept</Button>
+        <Button variant="outline" size="sm" onClick={() => void safeRespond(state.connection.id, "rejected")}>Decline</Button>
       </>
     );
   }
 
-  return <Button size="sm" onClick={() => void onConnect(target.id)}>Connect</Button>;
+  return (
+    <>
+      {error ? <span className="text-xs text-red-600">{error}</span> : null}
+      <Button size="sm" onClick={() => void safeConnect()}>Connect</Button>
+    </>
+  );
 }
 
 function ProfilePage({
@@ -4386,10 +4442,20 @@ function NotificationsPage({
   onMarkRead: (notificationId: string) => Promise<void>;
   onMarkAllRead: () => Promise<void>;
 }) {
+  const [markAllError, setMarkAllError] = useState("");
   const userNotifications = notifications
     .filter((notification) => notification.userId === currentUser.id)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const unreadCount = userNotifications.filter((notification) => !notification.read).length;
+
+  const safeMarkAllRead = async () => {
+    try {
+      setMarkAllError("");
+      await onMarkAllRead();
+    } catch (markAllReadError) {
+      setMarkAllError(markAllReadError instanceof Error ? markAllReadError.message : "Failed to mark all as read.");
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -4400,9 +4466,10 @@ function NotificationsPage({
             <h1 className="mt-2 font-heading text-3xl font-bold text-[#142019]">Recent alerts and updates</h1>
             <p className="mt-2 text-sm text-slate-500">Connection requests, accepted connections, messages, and opportunity matches.</p>
           </div>
-          <Button variant="outline" disabled={!unreadCount} onClick={() => void onMarkAllRead()}>Mark all read</Button>
+          <Button variant="outline" disabled={!unreadCount} onClick={() => void safeMarkAllRead()}>Mark all read</Button>
         </div>
       </Panel>
+      {markAllError ? <ErrorMessage message={markAllError} /> : null}
 
       {userNotifications.length ? (
         <Panel>
@@ -4426,7 +4493,18 @@ function NotificationRow({
   notification: NotificationItem;
   onMarkRead: (notificationId: string) => Promise<void>;
 }) {
+  const [markReadError, setMarkReadError] = useState("");
   const tone = notification.type === "connection_request" ? "gold" : notification.type === "connection_accepted" ? "green" : notification.type === "opportunity_match" ? "primary" : "neutral";
+
+  const safeMarkRead = async () => {
+    try {
+      setMarkReadError("");
+      await onMarkRead(notification.id);
+    } catch (readError) {
+      setMarkReadError(readError instanceof Error ? readError.message : "Failed to mark as read.");
+    }
+  };
+
   return (
     <div className={cn("rounded-3xl border p-4 transition", notification.read ? "border-slate-200 bg-white" : "border-[#D4AF37]/40 bg-[#D4AF37]/10")}>
       <div className="flex items-start justify-between gap-4">
@@ -4434,8 +4512,9 @@ function NotificationRow({
           <Badge tone={tone}>{notification.type.replace(/_/g, " ")}</Badge>
           <p className="mt-3 text-sm font-semibold leading-6 text-[#142019]">{notification.message}</p>
           <p className="mt-1 text-xs text-slate-500">{relativeTime(notification.createdAt)}</p>
+          {markReadError ? <p className="mt-1 text-xs text-red-600">{markReadError}</p> : null}
         </div>
-        {!notification.read ? <Button variant="ghost" size="sm" onClick={() => void onMarkRead(notification.id)}>Mark read</Button> : null}
+        {!notification.read ? <Button variant="ghost" size="sm" onClick={() => void safeMarkRead()}>Mark read</Button> : null}
       </div>
     </div>
   );
@@ -4599,11 +4678,15 @@ function SettingsPage({
   onLogout: () => Promise<void>;
 }) {
   const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
 
   const runLogout = async () => {
     setLoggingOut(true);
+    setLogoutError("");
     try {
       await onLogout();
+    } catch (error) {
+      setLogoutError(error instanceof Error ? error.message : "Logout failed.");
     } finally {
       setLoggingOut(false);
     }
@@ -4626,6 +4709,8 @@ function SettingsPage({
           </Button>
         </div>
       </Panel>
+
+      {logoutError ? <ErrorMessage message={logoutError} /> : null}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_0.9fr]">
         <Panel>
