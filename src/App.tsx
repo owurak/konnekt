@@ -419,6 +419,16 @@ function normalize(value: string) {
   return value.trim().toLowerCase();
 }
 
+function isSafeUrl(url: string): boolean {
+  if (!url) return true;
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function splitTags(value: string) {
   return value
     .split(",")
@@ -1564,6 +1574,10 @@ export default function App() {
       throw new Error("Add a title and description before posting.");
     }
 
+    if (opportunity.applyLink && !isSafeUrl(opportunity.applyLink)) {
+      throw new Error("Apply link must use a valid http or https URL.");
+    }
+
     if (db) {
       await setDoc(doc(db, "opportunities", opportunity.id), opportunity);
     } else {
@@ -1631,6 +1645,14 @@ export default function App() {
 
     if (!listing.name || !listing.description || !listing.category) {
       throw new Error("Add a title, category, and description before posting.");
+    }
+
+    if (listing.website && !isSafeUrl(listing.website)) {
+      throw new Error("Website must use a valid http or https URL.");
+    }
+
+    if (listing.imageUrl && !isSafeUrl(listing.imageUrl)) {
+      throw new Error("Image URL must use a valid http or https URL.");
     }
 
     if (db) {
@@ -2506,7 +2528,7 @@ function LandingPage({ navigate, listings }: { navigate: (to: string) => void; l
 function getDirectoryMatches(category: string, search: string, source: BusinessListing[] = BUSINESS_LISTINGS) {
   const query = normalize(search);
   return source
-    .filter((business) => (business.status || "approved") === "approved" || business.status === "pending")
+    .filter((business) => (business.status || "approved") === "approved")
     .filter((business) => {
       const matchesCategory = !category || business.category === category;
       const matchesSearch =
@@ -4320,7 +4342,16 @@ function OpportunityDetailsPage({
 
   const applyOrContact = () => {
     if (opportunity.applyLink) {
-      window.open(opportunity.applyLink, "_blank", "noopener,noreferrer");
+      try {
+        const parsed = new URL(opportunity.applyLink, window.location.origin);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          setContactEmail("This link uses an unsupported protocol.");
+          return;
+        }
+        window.open(parsed.href, "_blank", "noopener,noreferrer");
+      } catch {
+        setContactEmail("Invalid link provided by poster.");
+      }
       return;
     }
     setContactEmail(poster?.email || "No email available for this poster.");
