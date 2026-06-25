@@ -90,56 +90,100 @@ export function DashboardPage({
     (listing) => listing.status === "approved" || listing.sellerId === currentUser.id || isAdminUser(currentUser)
   );
   const dashboardBusinesses = getDirectoryMatches(selectedDashboardCategory, dashboardSearch, visibleListings);
+  const userListings = listings.filter((listing) => listing.sellerId === currentUser.id);
+  const pendingListingCount = userListings.filter((listing) => listing.status === "pending").length;
+  const verifiedListingCount = visibleListings.filter((listing) => listing.verified).length;
+  const aiSuggestions = [
+    profileCompletion < 85
+      ? `Complete your profile bio and skills to improve trust before customers contact you. You are at ${profileCompletion}%.`
+      : "Your profile looks strong. Pin your best service or product listing next to convert profile visits.",
+    userListings.length
+      ? "Refresh one listing title with price, location, and delivery details so marketplace search can match it faster."
+      : "Create your first listing with a clear image, price, condition, and WhatsApp number to start selling.",
+    visibleOpportunities.length
+      ? "Reply to one opportunity today and mention your relevant skills in the first two lines."
+      : "Post a collaboration, service request, or job lead to activate the professional side of your network.",
+  ];
+  const monetizationCards = [
+    { title: "Boosted listings", detail: "Sellers pay to rank above normal results for 7 or 30 days." },
+    { title: "Verified seller badges", detail: "Charge a monthly fee for identity checks, trust badges, and priority support." },
+    { title: "Lead credits", detail: "Businesses buy credits to unlock premium leads, messages, or opportunity applications." },
+  ];
 
   if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1.35fr_0.9fr]">
       <div className="space-y-5">
-        <section className="animate-rise overflow-hidden rounded-[1.75rem] bg-[#1f1f1f] text-white shadow-xl shadow-slate-900/10 ring-1 ring-black/5">
-          <div className="bg-[#003b1f] px-5 py-8 text-center">
-            <p className="text-xs font-medium uppercase tracking-[0.35em] text-white/35">Business Directory</p>
-            <div className="mt-3 flex items-center justify-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#d9dedb] font-serif text-sm font-bold italic text-[#003b1f] shadow-lg">
-                K
+        <section className="animate-rise overflow-hidden rounded-[1.75rem] bg-[#071D2B] text-white shadow-xl shadow-cyan-950/15 ring-1 ring-cyan-950/10">
+          <div className="px-5 py-8 sm:px-7">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#2DD4BF]">LinkedIn meets marketplace</p>
+                <h1 className="mt-3 max-w-2xl font-heading text-4xl font-black leading-tight text-white sm:text-5xl">
+                  Build your network, sell your work, and turn attention into income.
+                </h1>
+                <p className="mt-4 max-w-2xl text-sm leading-6 text-cyan-50/78">
+                  Welcome back, {currentUser.fullName.split(" ")[0]}. Use Konnekt as your professional profile, seller storefront, opportunity board, and customer inbox.
+                </p>
               </div>
-              <h1 className="font-serif text-5xl font-black uppercase leading-none tracking-[-0.03em] text-white">KONNEKT</h1>
+              <div className="grid grid-cols-2 gap-2 sm:flex">
+                <Button className="bg-[#00A86B] hover:bg-[#008F5B]" onClick={() => setShowListingForm((previous) => !previous)}>
+                  <Icon name="plus" /> List item
+                </Button>
+                <Button className="bg-[#FFB020] text-[#241604] hover:bg-[#F5A000]" onClick={() => navigate("/opportunities")}>
+                  <Icon name="briefcase" /> Create lead
+                </Button>
+              </div>
             </div>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/82">
-              Find, connect & do business with local entrepreneurs. Welcome back, {currentUser.fullName.split(" ")[0]}.
-            </p>
-            <div className="mt-5 flex justify-center gap-2">
-              <button className="rounded-full border border-white/12 bg-[#00361d] px-4 py-2 text-sm font-medium text-white/90" type="button" onClick={() => navigate("/network")}>Find</button>
-              <button className="rounded-full border border-white/12 bg-[#00361d] px-4 py-2 text-sm font-medium text-white/90" type="button" onClick={() => navigate("/messages")}>Connect</button>
-              <button className="rounded-full border border-white/12 bg-[#00361d] px-4 py-2 text-sm font-medium text-white/90" type="button" onClick={() => navigate("/opportunities")}>Grow</button>
-              <button className="rounded-full bg-[#D4AF37] px-4 py-2 text-sm font-extrabold text-[#241c06]" type="button" onClick={() => setShowListingForm((previous) => !previous)}>Post Listing</button>
+
+            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: "Connections", value: acceptedConnectionCount, helper: "Professional network", icon: "network" as const },
+                { label: "Marketplace", value: visibleListings.length, helper: `${pendingListingCount} pending review`, icon: "briefcase" as const },
+                { label: "Opportunities", value: approvedOpportunityCount, helper: "Approved leads", icon: "mail" as const },
+                { label: "Profile", value: `${profileCompletion}%`, helper: "Trust score", icon: "shield" as const },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+                  <Icon name={stat.icon} className="h-5 w-5 text-[#2DD4BF]" />
+                  <p className="mt-3 text-2xl font-black text-white">{stat.value}</p>
+                  <p className="text-sm font-bold text-white">{stat.label}</p>
+                  <p className="mt-1 text-xs text-cyan-50/58">{stat.helper}</p>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="border-b border-[#313131] px-4 py-4">
+          <div className="border-y border-white/10 bg-[#0B2A3C] px-4 py-4">
             <div className="grid grid-cols-[1fr_auto] gap-3">
               <label className="relative block">
-                <Icon name="search" className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/42" />
+                <Icon name="search" className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-cyan-50/50" />
                 <input
-                  className="h-12 w-full rounded-xl border border-[#555663] bg-[#2a2a2a] pl-11 pr-4 text-sm text-white outline-none placeholder:text-white/42 focus:border-[#008a58]"
-                  placeholder="Search business categories..."
+                  className="h-12 w-full rounded-xl border border-white/10 bg-white/10 pl-11 pr-4 text-sm text-white outline-none placeholder:text-cyan-50/48 focus:border-[#2DD4BF]"
+                  placeholder="Search products, services, sellers, or categories..."
                   value={dashboardSearch}
                   onChange={(event) => setDashboardSearch(event.target.value)}
                 />
               </label>
-              <button className="h-12 rounded-xl bg-[#003b1f] px-4 text-sm font-extrabold text-white" type="button" onClick={() => setSelectedDashboardCategory("")}>Search</button>
+              <button className="h-12 rounded-xl bg-[#00A86B] px-4 text-sm font-extrabold text-white" type="button" onClick={() => setSelectedDashboardCategory("")}>Search</button>
             </div>
           </div>
 
           <div className="px-4 py-7">
-            <h2 className="font-serif text-3xl font-black uppercase leading-none tracking-[-0.02em] text-white">Featured Categories</h2>
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#2DD4BF]">Marketplace</p>
+                <h2 className="mt-1 font-heading text-2xl font-black text-white">Buy, sell, and discover services</h2>
+              </div>
+              <button className="text-sm font-bold text-[#FFB020]" type="button" onClick={() => setShowListingForm(true)}>Post listing</button>
+            </div>
             <div className="mt-5 grid grid-cols-2 gap-x-3 gap-y-4">
               {dashboardCategories.map((category) => (
                 <button
                   key={category.title}
                   className={cn(
-                    "overflow-hidden rounded-xl bg-[#202020] text-left ring-1 ring-white/[0.03]",
-                    selectedDashboardCategory === category.title && "ring-2 ring-[#008a58]"
+                    "overflow-hidden rounded-xl bg-white/[0.06] text-left ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:ring-[#2DD4BF]",
+                    selectedDashboardCategory === category.title && "ring-2 ring-[#2DD4BF]"
                   )}
                   type="button"
                   onClick={() => {
@@ -160,30 +204,22 @@ export function DashboardPage({
           <div className="border-t border-white/10 px-4 pb-6">
             <BusinessResults title={dashboardSearch ? `Search results for "${dashboardSearch}"` : selectedDashboardCategory} businesses={dashboardBusinesses} />
           </div>
-
-          <div className="grid grid-cols-2 gap-x-4 gap-y-7 bg-[#003b1f] px-4 py-7 text-center">
-            <div>
-              <Icon name="network" className="mx-auto h-7 w-7 text-white/70" />
-              <p className="mt-2 text-lg font-extrabold text-white">{acceptedConnectionCount} Connections</p>
-              <p className="text-sm text-white/68">Accepted network</p>
-            </div>
-            <div>
-              <Icon name="briefcase" className="mx-auto h-7 w-7 text-white/70" />
-              <p className="mt-2 text-lg font-extrabold text-white">{approvedOpportunityCount} Opportunities</p>
-              <p className="text-sm text-white/68">Approved posts</p>
-            </div>
-            <div>
-              <Icon name="user" className="mx-auto h-7 w-7 text-white/70" />
-              <p className="mt-2 text-lg font-extrabold text-white">{profileCompletion}% Profile</p>
-              <p className="text-sm text-white/68">Completion score</p>
-            </div>
-            <div>
-              <Icon name="shield" className="mx-auto h-7 w-7 text-white/70" />
-              <p className="mt-2 text-lg font-extrabold text-white">Verified</p>
-              <p className="text-sm text-white/68">Trusted listings</p>
-            </div>
-          </div>
         </section>
+
+        <Panel className="border border-[#2DD4BF]/20 bg-[#ECFEFF]">
+          <SectionTitle title="AI growth assistant" action={<Badge tone="primary">Beta</Badge>} />
+          <div className="mt-4 grid gap-3">
+            {aiSuggestions.map((suggestion) => (
+              <div key={suggestion} className="rounded-2xl border border-cyan-200 bg-white p-4 text-sm leading-6 text-slate-700">
+                <span className="font-bold text-[#0F766E]">AI suggestion: </span>
+                {suggestion}
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 rounded-2xl bg-[#071D2B] p-4 text-sm leading-6 text-cyan-50/80">
+            Later, connect this panel to an OpenAI-powered backend endpoint to rewrite listings, generate outreach messages, recommend matches, and detect spam before admin review.
+          </div>
+        </Panel>
 
         {listingSuccess ? <SuccessMessage message={listingSuccess} /> : null}
         {showListingForm ? (
@@ -240,6 +276,44 @@ export function DashboardPage({
       </div>
 
       <div className="space-y-5">
+        <Panel className="border border-amber-200 bg-[#FFFBEB]">
+          <SectionTitle title="Creator dashboard" action={<Badge tone="green">{verifiedListingCount} verified</Badge>} />
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-2xl bg-white p-3">
+              <p className="text-xl font-black text-[#071D2B]">{userListings.length}</p>
+              <p className="text-[11px] font-bold uppercase text-slate-500">Listings</p>
+            </div>
+            <div className="rounded-2xl bg-white p-3">
+              <p className="text-xl font-black text-[#071D2B]">{pendingListingCount}</p>
+              <p className="text-[11px] font-bold uppercase text-slate-500">Pending</p>
+            </div>
+            <div className="rounded-2xl bg-white p-3">
+              <p className="text-xl font-black text-[#071D2B]">{visibleOpportunities.length}</p>
+              <p className="text-[11px] font-bold uppercase text-slate-500">Leads</p>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-2">
+            <Button className="w-full bg-[#00A86B] hover:bg-[#008F5B]" onClick={() => setShowListingForm(true)}>
+              <Icon name="plus" /> Create listing
+            </Button>
+            <Button className="w-full" variant="outline" onClick={() => navigate("/opportunities")}>
+              <Icon name="briefcase" /> Post opportunity
+            </Button>
+          </div>
+        </Panel>
+
+        <Panel>
+          <SectionTitle title="Revenue ideas" />
+          <div className="mt-4 space-y-3">
+            {monetizationCards.map((card) => (
+              <div key={card.title} className="rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="font-heading text-sm font-bold text-[#071D2B]">{card.title}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-500">{card.detail}</p>
+              </div>
+            ))}
+          </div>
+        </Panel>
+
         <Panel>
           <SectionTitle title="Notifications preview" action={<button className="text-sm font-bold text-[#0B6B3A]" type="button" onClick={() => navigate("/notifications")}>Open</button>} />
           <div className="mt-4 space-y-3">

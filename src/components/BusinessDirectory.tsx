@@ -35,23 +35,23 @@ export function DirectorySection({
 }) {
   return (
     <div>
-      <h2 className="font-serif text-[2rem] font-black uppercase leading-none tracking-[-0.02em] text-white sm:text-4xl">{title}</h2>
+      <h2 className="font-heading text-[2rem] font-black leading-tight text-white sm:text-4xl">{title}</h2>
       <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5">
         {categories.map((category) => (
           <button
             key={category.title}
             className={cn(
-              "group overflow-hidden rounded-xl bg-[#202020] text-left shadow-lg shadow-black/10 ring-1 ring-white/[0.03] transition hover:-translate-y-0.5 hover:ring-[#008a58]/60",
-              selectedCategory === category.title && "ring-2 ring-[#008a58]"
+              "group overflow-hidden rounded-xl bg-[#0B2A3C] text-left shadow-lg shadow-black/10 ring-1 ring-white/10 transition hover:-translate-y-0.5 hover:ring-[#2DD4BF]/70",
+              selectedCategory === category.title && "ring-2 ring-[#2DD4BF]"
             )}
             type="button"
             onClick={() => onSelect(category.title)}
           >
             <div className="relative h-[9.55rem] overflow-hidden sm:h-48">
               <img className="h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105 group-hover:opacity-90" src={category.image} alt={category.title} />
-              <div className="absolute inset-0 bg-black/18" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#071D2B]/70 to-transparent" />
             </div>
-            <p className="px-2 py-3 text-center text-[1.35rem] font-normal leading-tight text-white sm:text-2xl">{category.title}</p>
+            <p className="px-3 py-3 text-center text-base font-bold leading-tight text-white sm:text-xl">{category.title}</p>
           </button>
         ))}
       </div>
@@ -63,17 +63,17 @@ export function BusinessResults({ title, businesses }: { title: string; business
   return (
     <div>
       <div className="flex items-end justify-between gap-4">
-        <h2 className="font-serif text-3xl font-black uppercase text-white">{title || "Listings"}</h2>
-        <span className="rounded-full bg-[#003b1f] px-3 py-1 text-xs font-bold text-white">{businesses.length} found</span>
+        <h2 className="font-heading text-2xl font-black text-white sm:text-3xl">{title || "Listings"}</h2>
+        <span className="rounded-full bg-[#00A86B] px-3 py-1 text-xs font-bold text-white">{businesses.length} found</span>
       </div>
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         {businesses.length ? businesses.map((business) => (
-          <article key={business.id} className="overflow-hidden rounded-2xl bg-[#242424] ring-1 ring-white/10">
-            <div className="relative h-44 bg-[#1b1b1b]">
+          <article key={business.id} className="overflow-hidden rounded-2xl bg-white text-[#071D2B] shadow-lg shadow-cyan-950/10 ring-1 ring-slate-200">
+            <div className="relative h-44 bg-[#E6F7F4]">
               {business.imageUrl ? (
-                <img className="h-full w-full object-cover opacity-85" src={business.imageUrl} alt={business.name} />
+                <img className="h-full w-full object-cover" src={business.imageUrl} alt={business.name} />
               ) : (
-                <div className="flex h-full items-center justify-center bg-[#003b1f] text-center font-serif text-2xl font-black uppercase text-white/70">
+                <div className="flex h-full items-center justify-center bg-[#0B2A3C] px-5 text-center font-heading text-2xl font-black text-white/80">
                   {business.category}
                 </div>
               )}
@@ -82,7 +82,7 @@ export function BusinessResults({ title, businesses }: { title: string; business
                 {business.status === "pending" ? <Badge tone="red">Pending approval</Badge> : null}
               </div>
               {business.price ? (
-                <div className="absolute bottom-3 left-3 rounded-full bg-[#D4AF37] px-3 py-1 text-sm font-extrabold text-[#241c06]">
+                <div className="absolute bottom-3 left-3 rounded-full bg-[#FFB020] px-3 py-1 text-sm font-extrabold text-[#241604] shadow-lg">
                   {business.price}
                 </div>
               ) : null}
@@ -90,22 +90,22 @@ export function BusinessResults({ title, businesses }: { title: string; business
             <div className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="font-heading text-lg font-bold text-white">{business.name}</h3>
-                  <p className="mt-1 text-sm font-semibold text-[#D4AF37]">{business.category}</p>
+                  <h3 className="font-heading text-lg font-bold text-[#071D2B]">{business.name}</h3>
+                  <p className="mt-1 text-sm font-semibold text-[#0F766E]">{business.category}</p>
                 </div>
                 {business.condition ? <Badge tone="primary">{business.condition}</Badge> : null}
               </div>
-              <p className="mt-3 text-sm leading-6 text-white/65">{business.description}</p>
-              <div className="mt-4 grid gap-2 text-sm text-white/60">
-                <p className="flex items-center gap-2"><Icon name="location" className="h-4 w-4 text-[#D4AF37]" />{business.location}</p>
-                {business.phone ? <p className="flex items-center gap-2"><Icon name="mail" className="h-4 w-4 text-[#D4AF37]" />{business.phone}</p> : null}
-                {business.sellerName ? <p className="flex items-center gap-2"><Icon name="user" className="h-4 w-4 text-[#D4AF37]" />{business.sellerName}</p> : null}
+              <p className="mt-3 text-sm leading-6 text-slate-600">{business.description}</p>
+              <div className="mt-4 grid gap-2 text-sm text-slate-500">
+                <p className="flex items-center gap-2"><Icon name="location" className="h-4 w-4 text-[#00A86B]" />{business.location}</p>
+                {business.phone ? <p className="flex items-center gap-2"><Icon name="mail" className="h-4 w-4 text-[#00A86B]" />{business.phone}</p> : null}
+                {business.sellerName ? <p className="flex items-center gap-2"><Icon name="user" className="h-4 w-4 text-[#00A86B]" />{business.sellerName}</p> : null}
               </div>
             </div>
           </article>
         )) : (
-          <div className="col-span-full rounded-2xl border border-dashed border-white/20 p-8 text-center">
-            <p className="text-base font-semibold text-white/50">No businesses found in this category yet.</p>
+          <div className="col-span-full rounded-2xl border border-dashed border-cyan-200 bg-white/8 p-8 text-center">
+            <p className="text-base font-semibold text-white/65">No businesses found in this category yet.</p>
           </div>
         )}
       </div>
