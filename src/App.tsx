@@ -36,95 +36,28 @@ import {
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { auth, db, isFirebaseConfigured, storage } from "./lib/firebase";
 import { cn } from "./utils/cn";
-
-type Role = "member" | "admin";
-type ConnectionStatus = "pending" | "accepted" | "rejected";
-type OpportunityType = "Job" | "Business" | "Collaboration";
-type OpportunityStatus = "pending" | "approved";
-type NotificationType =
-  | "connection_request"
-  | "connection_accepted"
-  | "opportunity_match"
-  | "message"
-  | "system";
-
-type UserProfile = {
-  id: string;
-  fullName: string;
-  professionalTitle: string;
-  industry: string;
-  skills: string[];
-  location: string;
-  bio: string;
-  photoUrl: string;
-  email: string;
-  portfolioWebsite: string;
-  role: Role;
-  verified: boolean;
-  suspended: boolean;
-  createdAt: string;
-};
-
-type Connection = {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  status: ConnectionStatus;
-  createdAt: string;
-};
-
-type Opportunity = {
-  id: string;
-  title: string;
-  description: string;
-  type: OpportunityType;
-  industry?: string;
-  location: string;
-  budget?: string;
-  deadline?: string;
-  applyLink: string;
-  posterId: string;
-  status: OpportunityStatus;
-  createdAt: string;
-};
-
-type ListingStatus = "pending" | "approved";
-
-type BusinessListing = {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  location: string;
-  phone: string;
-  website: string;
-  verified: boolean;
-  price?: string;
-  condition?: string;
-  imageUrl?: string;
-  sellerId?: string;
-  sellerName?: string;
-  sellerEmail?: string;
-  status?: ListingStatus;
-  createdAt?: string;
-};
-
-type NotificationItem = {
-  id: string;
-  userId: string;
-  type: NotificationType;
-  message: string;
-  read: boolean;
-  createdAt: string;
-};
-
-type Message = {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  body: string;
-  createdAt: string;
-};
+import type {
+  AuthMode,
+  BusinessListing,
+  Connection,
+  Message,
+  NotificationItem,
+  NotificationType,
+  Opportunity,
+  OpportunityType,
+  ProfileFormValues,
+  SocialProviderName,
+  UserProfile,
+} from "./types";
+import { nowIso, daysAgo, formatDate, relativeTime } from "./utils/date";
+import { normalize, splitTags, newId, avatarUrl, getInitials } from "./utils/string";
+import { isAuthPath, getAuthMode, isAdminUser, getSocialAuthErrorMessage, getStorageUploadErrorMessage } from "./utils/auth";
+import { getConnectionState, getConnectedProfiles, getAcceptedConnectionCount } from "./utils/connections";
+import { isNavigationActive, pageTitle } from "./utils/navigation";
+import { canViewOpportunity } from "./utils/opportunity";
+import { getDirectoryMatches } from "./utils/directory";
+import { buildFirebaseProfile, profileToForm } from "./utils/profile";
+import { getSuggestedUsers } from "./utils/suggestions";
 
 type DemoAccount = {
   userId: string;
@@ -160,16 +93,6 @@ type RegisterValues = {
   portfolioWebsite: string;
 };
 
-type ProfileFormValues = {
-  fullName: string;
-  professionalTitle: string;
-  industry: string;
-  skills: string;
-  location: string;
-  bio: string;
-  portfolioWebsite: string;
-};
-
 type CreateOpportunityValues = {
   title: string;
   description: string;
@@ -193,8 +116,6 @@ type CreateListingValues = {
   imageUrl: string;
 };
 
-type AuthMode = "login" | "register" | "reset";
-type SocialProviderName = "google";
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
@@ -402,123 +323,6 @@ const BUSINESS_LISTINGS: BusinessListing[] = [
     createdAt: daysAgo(3),
   },
 ];
-
-function nowIso() {
-  return new Date().toISOString();
-}
-
-function daysAgo(days: number) {
-  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-}
-
-function newId(prefix: string) {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}-${Date.now().toString(36)}`;
-}
-
-function normalize(value: string) {
-  return value.trim().toLowerCase();
-}
-
-function splitTags(value: string) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, 12);
-}
-
-function avatarUrl(name: string) {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    name || "Konnekt User"
-  )}&background=0B6B3A&color=ffffff&bold=true`;
-}
-
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(iso));
-}
-
-function relativeTime(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const minutes = Math.max(1, Math.floor(diff / 60000));
-  if (minutes < 2) return "just now";
-  if (minutes < 60) return `${minutes} min ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hr ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
-  return formatDate(iso);
-}
-
-function isAuthPath(path: string) {
-  return path === "/login" || path === "/register" || path === "/reset";
-}
-
-function getAuthMode(path: string): AuthMode | null {
-  if (path === "/register") return "register";
-  if (path === "/reset") return "reset";
-  if (path === "/login") return "login";
-  return null;
-}
-
-function canViewOpportunity(opportunity: Opportunity, currentUser: UserProfile) {
-  return (
-    opportunity.status === "approved" ||
-    opportunity.posterId === currentUser.id ||
-    isAdminUser(currentUser)
-  );
-}
-
-function isAdminUser(user: Pick<UserProfile, "role"> | null | undefined) {
-  return normalize(String(user?.role || "")) === "admin";
-}
-
-function getConnectionState(targetId: string, currentUserId: string, connections: Connection[]) {
-  const connection = connections.find(
-    (item) =>
-      item.status !== "rejected" &&
-      ((item.senderId === currentUserId && item.receiverId === targetId) ||
-        (item.senderId === targetId && item.receiverId === currentUserId))
-  );
-
-  if (!connection) return { state: "none" as const, connection: null };
-  if (connection.status === "accepted") return { state: "connected" as const, connection };
-  if (connection.senderId === currentUserId) return { state: "sent" as const, connection };
-  return { state: "received" as const, connection };
-}
-
-function getOtherUserId(connection: Connection, currentUserId: string) {
-  return connection.senderId === currentUserId ? connection.receiverId : connection.senderId;
-}
-
-function getConnectedProfiles(
-  currentUserId: string,
-  users: UserProfile[],
-  connections: Connection[]
-) {
-  const connectedIds = new Set(
-    connections
-      .filter(
-        (connection) =>
-          connection.status === "accepted" &&
-          (connection.senderId === currentUserId || connection.receiverId === currentUserId)
-      )
-      .map((connection) => getOtherUserId(connection, currentUserId))
-  );
-
-  return users.filter((user) => connectedIds.has(user.id) && !user.suspended);
-}
-
-function getAcceptedConnectionCount(userId: string, connections: Connection[]) {
-  return connections.filter(
-    (connection) =>
-      connection.status === "accepted" &&
-      (connection.senderId === userId || connection.receiverId === userId)
-  ).length;
-}
 
 function mapSnapshot<T extends { id: string }>(snapshot: {
   docs: Array<{ id: string; data: () => unknown }>;
@@ -789,31 +593,6 @@ function getInitialPath() {
   return window.location.pathname;
 }
 
-function buildFirebaseProfile(user: {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-}): UserProfile {
-  const displayName = user.displayName || user.email?.split("@")[0] || "Konnekt Member";
-  return {
-    id: user.uid,
-    fullName: displayName,
-    professionalTitle: "Professional",
-    industry: "Professional Services",
-    skills: [],
-    location: "Remote across Africa",
-    bio: "",
-    photoUrl: user.photoURL || avatarUrl(displayName),
-    email: user.email || "",
-    portfolioWebsite: "",
-    role: "member",
-    verified: false,
-    suspended: false,
-    createdAt: nowIso(),
-  };
-}
-
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -914,54 +693,12 @@ async function optimizeProfilePhotoFile(file: File) {
   return file;
 }
 
-function getStorageUploadErrorMessage(uploadError: unknown) {
-  const message = uploadError instanceof Error ? uploadError.message : String(uploadError);
-
-  if (message.includes("storage/unauthorized")) {
-    return "Firebase Storage blocked this upload. Deploy the latest storage.rules and make sure you are signed in.";
-  }
-  if (message.includes("storage/bucket-not-found") || message.includes("storage/invalid-url")) {
-    return "Firebase Storage is not configured correctly. Check VITE_FIREBASE_STORAGE_BUCKET in your hosting environment.";
-  }
-  if (message.includes("storage/quota-exceeded")) {
-    return "Firebase Storage quota has been exceeded. Check your Firebase project billing or quota.";
-  }
-  if (message.includes("storage/retry-limit-exceeded") || message.includes("storage/canceled")) {
-    return "The upload could not finish. Check your internet connection and try again.";
-  }
-
-  return message || "Unable to upload this profile photo. Try a smaller JPG or PNG image.";
-}
-
 function shouldUseRedirectSignIn() {
   if (typeof window === "undefined") return false;
   return (
     window.matchMedia("(max-width: 768px)").matches ||
     window.matchMedia("(pointer: coarse)").matches
   );
-}
-
-function getSocialAuthErrorMessage(error: unknown, providerName?: SocialProviderName) {
-  const message = error instanceof Error ? error.message : String(error);
-  const providerLabel = providerName === "google" ? "Google" : "social";
-
-  if (message.includes("auth/popup-closed-by-user")) {
-    return "Sign-in was cancelled before it completed.";
-  }
-  if (message.includes("auth/popup-blocked")) {
-    return "Your browser blocked the sign-in popup. Try again, or use email and password.";
-  }
-  if (message.includes("auth/operation-not-allowed")) {
-    return `Enable ${providerLabel} sign-in in Firebase Authentication first.`;
-  }
-  if (message.includes("auth/unauthorized-domain")) {
-    return "Add this domain to Firebase Authentication authorized domains.";
-  }
-  if (message.includes("auth/account-exists-with-different-credential")) {
-    return "An account already exists with this email using another sign-in method. Login with that method first.";
-  }
-
-  return message || `${providerLabel} sign-in failed.`;
 }
 
 function useOnlineStatus() {
@@ -2176,15 +1913,6 @@ function Badge({
   );
 }
 
-function getInitials(name: string) {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2);
-  return (parts.map((part) => part[0]).join("") || "K").toUpperCase();
-}
-
 function Avatar({
   user,
   size = "md",
@@ -2501,23 +2229,6 @@ function LandingPage({ navigate, listings }: { navigate: (to: string) => void; l
       </section>
     </main>
   );
-}
-
-function getDirectoryMatches(category: string, search: string, source: BusinessListing[] = BUSINESS_LISTINGS) {
-  const query = normalize(search);
-  return source
-    .filter((business) => (business.status || "approved") === "approved" || business.status === "pending")
-    .filter((business) => {
-      const matchesCategory = !category || business.category === category;
-      const matchesSearch =
-        !query ||
-        [business.name, business.category, business.description, business.location, business.sellerName, business.price]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
-      return matchesSearch && (query ? true : matchesCategory);
-    })
-    .sort((a, b) => new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime());
 }
 
 function DirectorySection({
@@ -3305,25 +3016,6 @@ function NavButton({
   );
 }
 
-function isNavigationActive(path: string, itemPath: string) {
-  if (itemPath === "/") return path === "/";
-  if (itemPath === "/opportunities") return path === "/opportunities" || path.startsWith("/opportunity/");
-  if (itemPath.startsWith("/profile")) return path.startsWith("/profile");
-  return path === itemPath || path.startsWith(`${itemPath}/`);
-}
-
-function pageTitle(path: string) {
-  if (path === "/") return "Home";
-  if (path.startsWith("/network")) return "Network";
-  if (path.startsWith("/opportunit") || path.startsWith("/opportunity")) return "Opportunities";
-  if (path.startsWith("/profile")) return "Profile";
-  if (path.startsWith("/notifications")) return "Notifications";
-  if (path.startsWith("/messages")) return "Messages";
-  if (path.startsWith("/settings")) return "Settings";
-  if (path.startsWith("/admin")) return "Admin";
-  return "Konnekt";
-}
-
 function DashboardPage({
   currentUser,
   users,
@@ -3624,27 +3316,6 @@ function SectionTitle({ title, action }: { title: string; action?: ReactNode }) 
       {action}
     </div>
   );
-}
-
-function getSuggestedUsers(currentUser: UserProfile, users: UserProfile[], connections: Connection[]) {
-  return users
-    .filter((user) => user.id !== currentUser.id && !user.suspended)
-    .map((user) => {
-      const connectionState = getConnectionState(user.id, currentUser.id, connections).state;
-      const sharedSkills = user.skills.filter((skill) =>
-        currentUser.skills.some((currentSkill) => normalize(currentSkill) === normalize(skill))
-      ).length;
-      const score =
-        (user.industry === currentUser.industry ? 4 : 0) +
-        sharedSkills * 2 +
-        (user.location === currentUser.location ? 1 : 0) -
-        (connectionState === "connected" ? 5 : 0) -
-        (connectionState === "sent" ? 3 : 0);
-      return { user, score };
-    })
-    .filter((item) => item.score > -4)
-    .sort((a, b) => b.score - a.score || a.user.fullName.localeCompare(b.user.fullName))
-    .map((item) => item.user);
 }
 
 function NetworkPage({
@@ -4071,18 +3742,6 @@ function ProfilePage({
       </div>
     </div>
   );
-}
-
-function profileToForm(profile: UserProfile): ProfileFormValues {
-  return {
-    fullName: profile.fullName,
-    professionalTitle: profile.professionalTitle,
-    industry: profile.industry,
-    skills: profile.skills.join(", "),
-    location: profile.location,
-    bio: profile.bio,
-    portfolioWebsite: profile.portfolioWebsite,
-  };
 }
 
 function InfoLine({ icon, label, value }: { icon: IconName; label: string; value: string }) {
