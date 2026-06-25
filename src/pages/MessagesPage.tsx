@@ -87,8 +87,10 @@ export function MessagesPage({
             <button
               key={contact.id}
               className={cn(
-                "flex w-full items-center gap-3 rounded-3xl p-3 text-left transition",
-                selectedContact?.id === contact.id ? "bg-[#0B6B3A] text-white" : "hover:bg-[#F8FAF9]"
+                "flex w-full items-center gap-3 rounded-3xl p-3 text-left transition duration-200 cursor-pointer",
+                selectedContact?.id === contact.id 
+                  ? "bg-[#0B6B3A] text-white shadow-md shadow-emerald-900/20" 
+                  : "hover:bg-white hover:shadow-sm hover:shadow-slate-200/70 hover:ring-1 hover:ring-slate-200/70"
               )}
               type="button"
               onClick={() => {
@@ -132,7 +134,7 @@ export function MessagesPage({
               {error ? <ErrorMessage message={error} /> : null}
               <div className="flex gap-2">
                 <input
-                  className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0B6B3A]"
+                  className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition duration-200 hover:border-slate-300 focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10"
                   value={messageBody}
                   onChange={(event) => setMessageBody(event.target.value)}
                   placeholder="Write a professional message"

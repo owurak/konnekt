@@ -24,13 +24,13 @@ export function NetworkUserCard({
   const connectionCount = getAcceptedConnectionCount(profile.id, connections);
 
   return (
-    <article className="rounded-3xl bg-white p-5 shadow-sm shadow-slate-200/70 ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200">
+    <article className="rounded-3xl bg-white p-5 shadow-sm shadow-slate-200/70 ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-1 hover:shadow-md hover:shadow-slate-300">
       <div className="flex items-start gap-4">
-        <button type="button" onClick={() => navigate(`/profile/${profile.id}`)}>
+        <button type="button" onClick={() => navigate(`/profile/${profile.id}`)} className="cursor-pointer transition hover:opacity-80">
           <Avatar user={profile} size={compact ? "md" : "lg"} />
         </button>
         <div className="min-w-0 flex-1">
-          <button className="block truncate text-left font-heading text-lg font-bold text-[#142019] hover:text-[#0B6B3A]" type="button" onClick={() => navigate(`/profile/${profile.id}`)}>
+          <button className="block truncate text-left font-heading text-lg font-bold text-[#142019] transition hover:text-[#0B6B3A]" type="button" onClick={() => navigate(`/profile/${profile.id}`)}>
             {profile.fullName}
           </button>
           <p className="mt-1 line-clamp-2 text-sm text-slate-500">{profile.professionalTitle}</p>

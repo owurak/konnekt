@@ -73,13 +73,13 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition duration-200 focus:outline-none focus:ring-4 focus:ring-[#0B6B3A]/15",
+        "inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition duration-200 focus:outline-none focus:ring-4 focus:ring-[#0B6B3A]/15 cursor-pointer active:scale-95",
         "disabled:cursor-not-allowed disabled:opacity-60",
-        variant === "primary" && "bg-[#0B6B3A] text-white shadow-lg shadow-emerald-900/10 hover:bg-[#095a31]",
-        variant === "secondary" && "bg-[#D4AF37] text-[#241c06] hover:bg-[#c8a32f]",
-        variant === "outline" && "border border-slate-200 bg-white text-[#142019] hover:border-[#0B6B3A]/40 hover:text-[#0B6B3A]",
+        variant === "primary" && "bg-[#0B6B3A] text-white shadow-lg shadow-emerald-900/10 hover:bg-[#095a31] hover:shadow-xl hover:shadow-emerald-900/20",
+        variant === "secondary" && "bg-[#D4AF37] text-[#241c06] shadow-lg shadow-[#D4AF37]/20 hover:bg-[#c8a32f] hover:shadow-xl hover:shadow-[#D4AF37]/30",
+        variant === "outline" && "border border-slate-200 bg-white text-[#142019] hover:border-[#0B6B3A]/40 hover:text-[#0B6B3A] hover:shadow-sm hover:shadow-slate-200/70",
         variant === "ghost" && "text-slate-600 hover:bg-slate-100 hover:text-[#0B6B3A]",
-        variant === "danger" && "bg-red-600 text-white hover:bg-red-700",
+        variant === "danger" && "bg-red-600 text-white shadow-lg shadow-red-600/20 hover:bg-red-700 hover:shadow-xl hover:shadow-red-600/30",
         variant === "success" && "bg-emerald-100 text-emerald-700 hover:bg-emerald-200",
         size === "sm" && "px-3 py-2 text-xs",
         size === "md" && "px-4 py-2.5 text-sm",
@@ -102,11 +102,11 @@ type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
 
 export function Field({ label, helper, className, ...props }: FieldProps) {
   return (
-    <label className="block space-y-2">
+    <label className="block space-y-2 cursor-pointer">
       <span className="text-sm font-semibold text-slate-700">{label}</span>
       <input
         className={cn(
-          "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#142019] outline-none transition focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10",
+          "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#142019] outline-none transition duration-200 hover:border-slate-300 focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10",
           className
         )}
         {...props}
@@ -122,19 +122,19 @@ export function PasswordField({ label, helper, className, ...props }: PasswordFi
   const [visible, setVisible] = useState(false);
 
   return (
-    <label className="block space-y-2">
+    <label className="block space-y-2 cursor-pointer">
       <span className="text-sm font-semibold text-slate-700">{label}</span>
       <span className="relative block">
         <input
           className={cn(
-            "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-24 text-sm text-[#142019] outline-none transition focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10",
+            "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-24 text-sm text-[#142019] outline-none transition duration-200 hover:border-slate-300 focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10",
             className
           )}
           type={visible ? "text" : "password"}
           {...props}
         />
         <button
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl px-3 py-1.5 text-xs font-bold text-[#0B6B3A] transition hover:bg-[#0B6B3A]/10"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl px-3 py-1.5 text-xs font-bold text-[#0B6B3A] transition hover:bg-[#0B6B3A]/10 cursor-pointer"
           type="button"
           onClick={() => setVisible((previous) => !previous)}
           aria-label={visible ? "Hide password" : "Show password"}
@@ -154,11 +154,11 @@ type TextareaFieldProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 
 export function TextareaField({ label, helper, className, ...props }: TextareaFieldProps) {
   return (
-    <label className="block space-y-2">
+    <label className="block space-y-2 cursor-pointer">
       <span className="text-sm font-semibold text-slate-700">{label}</span>
       <textarea
         className={cn(
-          "min-h-28 w-full resize-y rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#142019] outline-none transition focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10",
+          "min-h-28 w-full resize-y rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#142019] outline-none transition duration-200 hover:border-slate-300 focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10",
           className
         )}
         {...props}
@@ -175,11 +175,11 @@ type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
 
 export function SelectField({ label, children, className, ...props }: SelectFieldProps) {
   return (
-    <label className="block space-y-2">
+    <label className="block space-y-2 cursor-pointer">
       <span className="text-sm font-semibold text-slate-700">{label}</span>
       <select
         className={cn(
-          "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#142019] outline-none transition focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10",
+          "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#142019] outline-none transition duration-200 hover:border-slate-300 focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10 cursor-pointer",
           className
         )}
         {...props}

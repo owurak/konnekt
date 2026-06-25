@@ -68,12 +68,12 @@ export function NetworkPage({
               placeholder="Search people, roles, skills"
             />
           </label>
-          <select className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0B6B3A]" value={industry} onChange={(event) => setIndustry(event.target.value)}>
+          <select className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition cursor-pointer focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10 hover:border-slate-300" value={industry} onChange={(event) => setIndustry(event.target.value)}>
             <option>All</option>
             {availableIndustries.map((item) => <option key={item}>{item}</option>)}
           </select>
-          <input className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0B6B3A]" value={skill} onChange={(event) => setSkill(event.target.value)} placeholder="Filter by skill" />
-          <select className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0B6B3A]" value={location} onChange={(event) => setLocation(event.target.value)}>
+          <input className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10" value={skill} onChange={(event) => setSkill(event.target.value)} placeholder="Filter by skill" />
+          <select className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition cursor-pointer focus:border-[#0B6B3A] focus:ring-4 focus:ring-[#0B6B3A]/10 hover:border-slate-300" value={location} onChange={(event) => setLocation(event.target.value)}>
             <option>All</option>
             {availableLocations.map((item) => <option key={item}>{item}</option>)}
           </select>
